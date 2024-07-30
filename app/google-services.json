@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "601034167020",
+    "project_id": "shumul",
+    "storage_bucket": "shumul.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:601034167020:android:7c7be03c496fdf5bd9cbc9",
+        "android_client_info": {
+          "package_name": "com.craftsilicon.shumul.agency"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4lxyLWdvzrlziql8DUh_uo6up7mlHxE0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
