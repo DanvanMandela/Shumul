@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -55,6 +56,8 @@ import com.craftsilicon.shumul.agency.data.bean.ValidationBean
 import com.craftsilicon.shumul.agency.data.security.APP
 import com.craftsilicon.shumul.agency.data.security.ActivationData
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
+import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
+import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
@@ -64,6 +67,7 @@ import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
+import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
 import com.craftsilicon.shumul.agency.ui.util.MoneyVisualTransformation
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
@@ -74,12 +78,16 @@ import kotlinx.coroutines.launch
 @Composable
 fun CustomerWithdrawalModule(function: () -> Unit) {
     val context = LocalContext.current
+    val work = hiltViewModel<WorkViewModel>()
+    val owner = LocalLifecycleOwner.current
     val model: RemoteViewModelImpl = hiltViewModel()
     val snackState = remember { SnackbarHostState() }
     var screenState: ModuleState by remember {
         mutableStateOf(ModuleState.DISPLAY)
     }
     val user = model.preferences.userData.collectAsState().value
+    val accountState = model.preferences.currentAccount.collectAsState().value
+
     val scope = rememberCoroutineScope()
     var account by rememberSaveable {
         mutableStateOf("")
@@ -129,7 +137,7 @@ fun CustomerWithdrawalModule(function: () -> Unit) {
                 DropDownResult(
                     key = it,
                     desc = it.account,
-                    display = it == user.account.first()
+                    display = it == accountState
                 )
             )
         }
@@ -366,7 +374,21 @@ fun CustomerWithdrawalModule(function: () -> Unit) {
                                                             )
                                                             screenState = ModuleState.DISPLAY
                                                             showDialog = true
-                                                        }, onToken = action
+                                                        }, onToken = {
+                                                            work.routeData(owner, object :
+                                                                WorkStatus {
+                                                                override fun workDone(b: Boolean) {
+                                                                    if (b) action.invoke()
+                                                                }
+
+                                                                override fun progress(p: Int) {
+                                                                    AppLogger.instance.appLog(
+                                                                        "DATA:Progress",
+                                                                        "$p"
+                                                                    )
+                                                                }
+                                                            })
+                                                        }
                                                     )
                                                 }
                                             )
@@ -458,7 +480,21 @@ fun CustomerWithdrawalModule(function: () -> Unit) {
                                         )
                                         screenState = ModuleState.DISPLAY
                                         showDialog = true
-                                    }, onToken = action
+                                    }, onToken = {
+                                        work.routeData(owner, object :
+                                            WorkStatus {
+                                            override fun workDone(b: Boolean) {
+                                                if (b) action.invoke()
+                                            }
+
+                                            override fun progress(p: Int) {
+                                                AppLogger.instance.appLog(
+                                                    "DATA:Progress",
+                                                    "$p"
+                                                )
+                                            }
+                                        })
+                                    }
                                 )
                             }
                         )

@@ -74,5 +74,21 @@ class UserDataTypeConverter @Inject constructor(private val gson: Gson) {
 
 }
 
+@Singleton
+class AccountDataTypeConverter @Inject constructor(private val gson: Gson) {
+    fun convert(data: Account?): String? {
+        return if (data == null) {
+            null
+        } else gson.toJson(data, Account::class.java)
+    }
+
+    fun convert(data: String?): Account? {
+        return if (data == null) {
+            null
+        } else gson.fromJson(data, Account::class.java)
+    }
+
+}
+
 
 

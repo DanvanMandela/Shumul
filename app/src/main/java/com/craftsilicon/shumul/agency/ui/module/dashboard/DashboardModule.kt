@@ -1,11 +1,9 @@
 package com.craftsilicon.shumul.agency.ui.module.dashboard
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,6 +23,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,9 +34,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
@@ -45,7 +44,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.craftsilicon.shumul.agency.R
+import com.craftsilicon.shumul.agency.data.bean.Account
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
+import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
+import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.module.dashboard.balance.AgentBalance
 import com.craftsilicon.shumul.agency.ui.module.dashboard.balance.BalanceModuleResponse
@@ -63,6 +65,7 @@ import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.navigation.NavigateDialog
 import com.craftsilicon.shumul.agency.ui.navigation.NavigateModule
 import com.craftsilicon.shumul.agency.ui.navigation.NavigationType
+import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
 import kotlinx.coroutines.delay
@@ -72,10 +75,14 @@ import kotlinx.coroutines.launch
 @Composable
 fun DashboardModule(data: GlobalData) {
     val context = LocalContext.current
+    val work = hiltViewModel<WorkViewModel>()
+    val owner = LocalLifecycleOwner.current
     val snackState = remember { SnackbarHostState() }
     val model = hiltViewModel<RemoteViewModelImpl>()
     val scope = rememberCoroutineScope()
     val user = model.preferences.userData.collectAsState().value
+    val accountState = model.preferences.currentAccount.collectAsState().value
+    val account: MutableState<Account?> = remember { mutableStateOf(accountState) }
     var screenState: ModuleState by remember {
         mutableStateOf(ModuleState.DISPLAY)
     }
@@ -85,6 +92,8 @@ fun DashboardModule(data: GlobalData) {
     val hello = model.preferences.helloWorld.collectAsState().value
     var showDialog by remember { mutableStateOf(false) }
     var action: () -> Unit = {}
+
+
 
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection()) {
         Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
@@ -140,64 +149,9 @@ fun DashboardModule(data: GlobalData) {
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
                     ) {
-                        AccountHelper(user = user)
-//                        Box(
-//                            modifier = Modifier
-//                                .padding(horizontal = 16.dp)
-//                                .clip(RoundedCornerShape(16.dp))
-//                                .aspectRatio(10 / 4.5f)
-//
-//                        ) {
-//                            Image(
-//                                painter = painterResource(id = R.drawable.account_back),
-//                                contentDescription = null,
-//                                contentScale = ContentScale.Crop,
-//                                modifier = Modifier.matchParentSize()
-//                            )
-//                            Column(
-//                                modifier = Modifier
-//                                    .matchParentSize()
-//                            ) {
-//                                Column(
-//                                    modifier = Modifier
-//                                        .padding(horizontal = 16.dp)
-//                                        .fillMaxSize()
-//                                        .weight(1f), verticalArrangement = Arrangement.Center
-//                                ) {
-//                                    Text(
-//                                        text = "${user?.account?.firstOrNull()?.agentID}",
-//                                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-//                                        style = MaterialTheme.typography.bodyLarge,
-//                                        color = Color.White
-//                                    )
-//                                    Text(
-//                                        text = stringResource(id = R.string.agent_id_),
-//                                        fontFamily = FontFamily(Font(R.font.montserrat_medium)),
-//                                        style = MaterialTheme.typography.labelMedium,
-//                                        color = Color.White
-//                                    )
-//                                }
-//                                Column(
-//                                    modifier = Modifier
-//                                        .padding(horizontal = 16.dp)
-//                                        .fillMaxSize()
-//                                        .weight(1f), verticalArrangement = Arrangement.Center
-//                                ) {
-//                                    Text(
-//                                        text = "${user?.mobile}",
-//                                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-//                                        style = MaterialTheme.typography.bodyLarge,
-//                                        color = Color.White
-//                                    )
-//                                    Text(
-//                                        text = "${user?.email}",
-//                                        fontFamily = FontFamily(Font(R.font.montserrat_medium)),
-//                                        style = MaterialTheme.typography.labelMedium,
-//                                        color = Color.White
-//                                    )
-//                                }
-//                            }
-//                        }
+                        AccountHolder(model = model, account = {
+                            account.value = it
+                        })
                         Spacer(modifier = Modifier.size(16.dp))
                         Column(
                             modifier = Modifier
@@ -220,10 +174,10 @@ fun DashboardModule(data: GlobalData) {
                                                 model.web(
                                                     path = "${model.deviceData?.agent}",
                                                     data = balanceFunc(
-                                                        account = "${user?.account?.firstOrNull()?.account}",
-                                                        fromAccount = "${user?.account?.firstOrNull()?.account}",
+                                                        account = "${account.value?.account}",
+                                                        fromAccount = "${account.value?.account}",
                                                         mobile = "${user?.mobile}",
-                                                        agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                                        agentId = "${account.value?.agentID}",
                                                         model = model,
                                                         pin = "$hello",
                                                         context = context
@@ -251,7 +205,21 @@ fun DashboardModule(data: GlobalData) {
                                                                         .OnBalance(message!!)
                                                                     showDialog = true
                                                                 }
-                                                            }, onToken = action
+                                                            }, onToken = {
+                                                                work.routeData(owner, object :
+                                                                    WorkStatus {
+                                                                    override fun workDone(b: Boolean) {
+                                                                        if (b) action.invoke()
+                                                                    }
+
+                                                                    override fun progress(p: Int) {
+                                                                        AppLogger.instance.appLog(
+                                                                            "DATA:Progress",
+                                                                            "$p"
+                                                                        )
+                                                                    }
+                                                                })
+                                                            }
                                                         )
                                                     }
                                                 )
@@ -274,9 +242,9 @@ fun DashboardModule(data: GlobalData) {
                                                 model.web(
                                                     path = "${model.deviceData?.agent}",
                                                     data = miniFunc(
-                                                        account = "${user?.account?.firstOrNull()?.account}",
+                                                        account = "${account.value?.account}",
                                                         mobile = "${user?.mobile}",
-                                                        agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                                        agentId = "${account.value?.agentID}",
                                                         model = model,
                                                         pin = "$hello",
                                                         context = context
@@ -307,7 +275,21 @@ fun DashboardModule(data: GlobalData) {
                                                                         .OnStatement(message!!)
                                                                     showDialog = true
                                                                 }
-                                                            }, onToken = action
+                                                            }, onToken = {
+                                                                work.routeData(owner, object :
+                                                                    WorkStatus {
+                                                                    override fun workDone(b: Boolean) {
+                                                                        if (b) action.invoke()
+                                                                    }
+
+                                                                    override fun progress(p: Int) {
+                                                                        AppLogger.instance.appLog(
+                                                                            "DATA:Progress",
+                                                                            "$p"
+                                                                        )
+                                                                    }
+                                                                })
+                                                            }
                                                         )
                                                     }
                                                 )
@@ -373,9 +355,9 @@ fun DashboardModule(data: GlobalData) {
                                         data = fullFunc(
                                             from = from,
                                             to = to,
-                                            account = "${user?.account?.firstOrNull()?.account}",
+                                            account = "${account.value?.account}",
                                             mobile = "${user?.mobile}",
-                                            agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                            agentId = "${account.value?.agentID}",
                                             model = model,
                                             pin = "$hello",
                                             context = context
@@ -405,7 +387,21 @@ fun DashboardModule(data: GlobalData) {
                                                             .OnStatement(message!!)
                                                         showDialog = true
                                                     }
-                                                }, onToken = action
+                                                }, onToken = {
+                                                    work.routeData(owner, object :
+                                                        WorkStatus {
+                                                        override fun workDone(b: Boolean) {
+                                                            if (b) action.invoke()
+                                                        }
+
+                                                        override fun progress(p: Int) {
+                                                            AppLogger.instance.appLog(
+                                                                "DATA:Progress",
+                                                                "$p"
+                                                            )
+                                                        }
+                                                    })
+                                                }
                                             )
                                         }
                                     )

@@ -2,6 +2,8 @@ package com.craftsilicon.shumul.agency.data.source.storage.pref
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.craftsilicon.shumul.agency.data.bean.Account
+import com.craftsilicon.shumul.agency.data.bean.AccountDataTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.AccountOpening
 import com.craftsilicon.shumul.agency.data.bean.AccountOpeningTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.UserData
@@ -20,7 +22,8 @@ class SharedPreferencesStorage @Inject constructor(
     private val security: AppSecurity,
     private val user: UserDataTypeConverter,
     private val deviceSerializer: DeviceDataTypeConverter,
-    private val account: AccountOpeningTypeConverter,
+    private val accountOpening: AccountOpeningTypeConverter,
+    private val account: AccountDataTypeConverter,
     @ApplicationContext context: Context,
 ) :
     StorageDataSource {
@@ -147,7 +150,7 @@ class SharedPreferencesStorage @Inject constructor(
     }
 
     private val _accountOpening = MutableStateFlow(
-        account.convert(
+        accountOpening.convert(
             sharedPreferences.getString(TAG_ACCOUNT_OPEN_DATA, "")?.let {
                 security.decrypt(it)
             }
@@ -161,7 +164,7 @@ class SharedPreferencesStorage @Inject constructor(
         _accountOpening.value = value
         with(sharedPreferences.edit()) {
             putString(TAG_ACCOUNT_OPEN_DATA,
-                account.convert(value)?.let { security.encrypt(it) })
+                accountOpening.convert(value)?.let { security.encrypt(it) })
             apply()
         }
     }
@@ -215,6 +218,26 @@ class SharedPreferencesStorage @Inject constructor(
         }
     }
 
+
+    private val _currentAccount = MutableStateFlow(
+        account.convert(
+            sharedPreferences.getString(TAG_CURRENT_ACCOUNT, "")?.let {
+                security.decrypt(it)
+            }
+        )
+    )
+
+    override fun currentAccount(value: Account) {
+        with(sharedPreferences.edit()) {
+            putString(TAG_CURRENT_ACCOUNT,
+                account.convert(value)?.let { security.encrypt(it) })
+            apply()
+        }
+    }
+
+    override val currentAccount: StateFlow<Account?>
+        get() = _currentAccount
+
     companion object {
         private const val SHARED_PREF_NAME = "pref"
         private const val USER_DATA = "userData"
@@ -226,5 +249,6 @@ class SharedPreferencesStorage @Inject constructor(
         private const val TAG_ACCOUNT_OPEN_DATA = "accountOpen"
         private const val TAG_TIME_OUT = "timeout"
         private const val TAG_IN_ACTIVITY = "inActivity"
+        private const val TAG_CURRENT_ACCOUNT = "currentAccount"
     }
 }

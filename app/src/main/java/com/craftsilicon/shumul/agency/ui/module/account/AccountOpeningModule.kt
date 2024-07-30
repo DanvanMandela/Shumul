@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -55,12 +56,15 @@ import com.craftsilicon.shumul.agency.data.bean.AccountOpening
 import com.craftsilicon.shumul.agency.data.bean.CustomerValidation
 import com.craftsilicon.shumul.agency.data.source.model.LocalViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
+import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
+import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
 import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
 import com.craftsilicon.shumul.agency.ui.navigation.Module
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
+import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
 import com.craftsilicon.shumul.agency.ui.util.countryCode
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
@@ -73,6 +77,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun AccountOpeningModule(data: GlobalData) {
     val context = LocalContext.current
+    val work = hiltViewModel<WorkViewModel>()
+    val owner = LocalLifecycleOwner.current
     val model: RemoteViewModelImpl = hiltViewModel()
     val local = hiltViewModel<LocalViewModelImpl>()
     val snackState = remember { SnackbarHostState() }
@@ -137,7 +143,21 @@ fun AccountOpeningModule(data: GlobalData) {
                                     screenState = ModuleState.DISPLAY
                                     delay(200)
                                 }
-                            }, onToken = action
+                            }, onToken = {
+                                work.routeData(owner, object :
+                                    WorkStatus {
+                                    override fun workDone(b: Boolean) {
+                                        if (b) action.invoke()
+                                    }
+
+                                    override fun progress(p: Int) {
+                                        AppLogger.instance.appLog(
+                                            "DATA:Progress",
+                                            "$p"
+                                        )
+                                    }
+                                })
+                            }
                         )
                     }
                 )

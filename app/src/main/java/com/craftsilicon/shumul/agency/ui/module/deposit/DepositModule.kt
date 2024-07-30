@@ -1,6 +1,5 @@
 package com.craftsilicon.shumul.agency.ui.module.deposit
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -60,6 +60,8 @@ import com.craftsilicon.shumul.agency.data.bean.ValidationBean
 import com.craftsilicon.shumul.agency.data.security.APP
 import com.craftsilicon.shumul.agency.data.security.ActivationData
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
+import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
+import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
@@ -70,6 +72,7 @@ import com.craftsilicon.shumul.agency.ui.module.validation.ValidationModuleRespo
 import com.craftsilicon.shumul.agency.ui.module.validation.validationFunc
 import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
+import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
 import com.craftsilicon.shumul.agency.ui.util.MoneyVisualTransformation
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
@@ -81,6 +84,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun DepositModule(data: GlobalData) {
     val context = LocalContext.current
+    val work = hiltViewModel<WorkViewModel>()
+    val owner = LocalLifecycleOwner.current
     val model: RemoteViewModelImpl = hiltViewModel()
     val user = model.preferences.userData.collectAsState().value
     val snackState = remember { SnackbarHostState() }
@@ -91,6 +96,7 @@ fun DepositModule(data: GlobalData) {
     var account by rememberSaveable {
         mutableStateOf("")
     }
+    val accountState = model.preferences.currentAccount.collectAsState().value
 
     var currency by rememberSaveable {
         mutableStateOf(context.getString(R.string.currency_symbol_))
@@ -140,7 +146,7 @@ fun DepositModule(data: GlobalData) {
                 DropDownResult(
                     key = it,
                     desc = it.account,
-                    display = it == user.account.first()
+                    display = it == accountState
                 )
             )
         }
@@ -384,7 +390,21 @@ fun DepositModule(data: GlobalData) {
                                                                 validation?.amountNum = account
                                                                 validationData.value = validation
                                                                 showDialog = true
-                                                            }, onToken = action
+                                                            }, onToken = {
+                                                                work.routeData(owner, object :
+                                                                    WorkStatus {
+                                                                    override fun workDone(b: Boolean) {
+                                                                        if (b) action.invoke()
+                                                                    }
+
+                                                                    override fun progress(p: Int) {
+                                                                        AppLogger.instance.appLog(
+                                                                            "DATA:Progress",
+                                                                            "$p"
+                                                                        )
+                                                                    }
+                                                                })
+                                                            }
                                                         )
                                                     }
                                                 )
@@ -470,7 +490,21 @@ fun DepositModule(data: GlobalData) {
                                         )
                                         screenState = ModuleState.DISPLAY
                                         showDialog = true
-                                    }, onToken = action
+                                    }, onToken = {
+                                        work.routeData(owner, object :
+                                            WorkStatus {
+                                            override fun workDone(b: Boolean) {
+                                                if (b) action.invoke()
+                                            }
+
+                                            override fun progress(p: Int) {
+                                                AppLogger.instance.appLog(
+                                                    "DATA:Progress",
+                                                    "$p"
+                                                )
+                                            }
+                                        })
+                                    }
                                 )
                             }
                         )

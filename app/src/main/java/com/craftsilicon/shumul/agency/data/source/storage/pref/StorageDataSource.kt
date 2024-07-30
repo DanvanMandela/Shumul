@@ -1,6 +1,7 @@
 package com.craftsilicon.shumul.agency.data.source.storage.pref
 
 import android.content.SharedPreferences
+import com.craftsilicon.shumul.agency.data.bean.Account
 import com.craftsilicon.shumul.agency.data.bean.AccountOpening
 import com.craftsilicon.shumul.agency.data.bean.UserData
 import com.craftsilicon.shumul.agency.data.bean.device.DeviceData
@@ -12,6 +13,9 @@ interface StorageDataSource {
 
     fun userData(value: UserData)
     val userData: StateFlow<UserData?>
+
+    fun currentAccount(value: Account)
+    val currentAccount: StateFlow<Account?>
 
     fun login(value: Boolean)
     val login: StateFlow<Boolean>
