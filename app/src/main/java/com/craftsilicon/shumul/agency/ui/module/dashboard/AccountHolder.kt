@@ -142,7 +142,7 @@ fun AccountHolder(model: RemoteViewModelImpl, account: (account: Account) -> Uni
             repeat(pagerState.pageCount) { iteration ->
                 val color =
                     if (pagerState.currentPage == iteration) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.secondary
+                    else MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)
                 Box(
                     modifier = Modifier
                         .padding(2.dp)

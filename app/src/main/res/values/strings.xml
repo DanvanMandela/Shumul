@@ -176,5 +176,7 @@
     <string name="agent_account_">Agent Account</string>
     <string name="enter_agent_account_number">Enter agent account number</string>
     <string name="total_income_">Total Income</string>
+    <string name="country_name">Yemen</string>
+    <string name="land_line_">Landline Phone Number</string>
 
 </resources>

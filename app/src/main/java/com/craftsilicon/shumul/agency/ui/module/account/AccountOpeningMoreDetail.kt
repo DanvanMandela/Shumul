@@ -161,6 +161,11 @@ fun AccountOpeningMoreDetail(data: GlobalData) {
         mutableStateOf("")
     }
 
+    var landline by rememberSaveable {
+        mutableStateOf("")
+    }
+
+
 
     var action: () -> Unit = {}
 
@@ -174,6 +179,18 @@ fun AccountOpeningMoreDetail(data: GlobalData) {
             }
 
         }
+
+    LaunchedEffect(key1 = Unit) {
+        context.resources.getStringArray(R.array.countries).forEach {
+            countries.add(
+                DropDownResult(
+                    key = it,
+                    desc = it,
+                    display = it == model.resourceProvider.getString(R.string.country_name)
+                )
+            )
+        }
+    }
 
     if (workSectorData.isEmpty())
         LaunchedEffect(key1 = Unit) {
@@ -310,7 +327,8 @@ fun AccountOpeningMoreDetail(data: GlobalData) {
                                                     city = city,
                                                     country = country,
                                                     address = address,
-                                                    occupation = occupation
+                                                    occupation = occupation,
+                                                    total = total
 
                                                 )
                                                 if (accountOpen != null) {
@@ -703,6 +721,35 @@ fun AccountOpeningMoreDetail(data: GlobalData) {
                                 label = {
                                     Text(
                                         text = stringResource(id = R.string.emergency_number_),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontFamily = FontFamily(Font(R.font.montserrat_medium))
+                                    )
+                                }, modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = horizontalModulePadding),
+                                textStyle = TextStyle(
+                                    fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                    fontSize = MaterialTheme.typography.labelLarge.fontSize
+                                ),
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Next,
+                                    keyboardType = KeyboardType.Phone
+                                ), prefix = {
+                                    Text(
+                                        text = countryCode(),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold))
+                                    )
+                                }
+                            )
+                            Spacer(modifier = Modifier.size(16.dp))
+                            OutlinedTextField(
+                                value = landline,
+                                onValueChange = { landline = it },
+                                label = {
+                                    Text(
+                                        text = stringResource(id = R.string.land_line_),
                                         style = MaterialTheme.typography.labelMedium,
                                         fontFamily = FontFamily(Font(R.font.montserrat_medium))
                                     )

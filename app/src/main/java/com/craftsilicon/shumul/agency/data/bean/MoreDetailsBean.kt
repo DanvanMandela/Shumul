@@ -32,6 +32,10 @@ data class MoreDetailsBean(
     val city: String?,
     @field:Expose
     val occupation: String?,
+    @field:Expose
+    val total: String?,
+    @field:Expose
+    val landline: String?,
 )
 
 @Singleton

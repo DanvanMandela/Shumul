@@ -153,6 +153,30 @@ fun AccountOpeningPersonalDetail(data: GlobalData) {
     }
 
     LaunchedEffect(key1 = Unit) {
+        context.resources.getStringArray(R.array.countries).forEach {
+            nationalities.add(
+                DropDownResult(
+                    key = it,
+                    desc = it,
+                    display = it == model.resourceProvider.getString(R.string.country_name)
+                )
+            )
+        }
+    }
+
+
+    LaunchedEffect(key1 = Unit) {
+        context.resources.getStringArray(R.array.marital_status).forEach {
+            marital.add(
+                DropDownResult(
+                    key = it,
+                    desc = it
+                )
+            )
+        }
+    }
+
+    LaunchedEffect(key1 = Unit) {
         identificationList.forEach {
             idTypes.add(
                 DropDownResult(
@@ -235,7 +259,9 @@ fun AccountOpeningPersonalDetail(data: GlobalData) {
                                                         id = idNumber,
                                                         idType = idType,
                                                         email = email,
-                                                        gender = gender
+                                                        gender = gender,
+                                                        marital = maritalStatus,
+                                                        nationality = nationality
                                                     )
                                                     if (accountOpen != null) {
                                                         model.preferences.accountOpen(accountOpen)

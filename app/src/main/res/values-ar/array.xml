@@ -10,4 +10,263 @@
         <item>ذكر</item>
         <item>أنثى</item>
     </string-array>
+
+    <string-array name="countries">
+        <item>أفغانستان</item>
+        <item>جزر آلاند</item>
+        <item>ألبانيا</item>
+        <item>الجزائر</item>
+        <item>ساموا الأمريكية</item>
+        <item>أندورا</item>
+        <item>أنغولا</item>
+        <item>أنغيلا</item>
+        <item>أنتاركتيكا</item>
+        <item>أنتيغوا وبربودا</item>
+        <item>الأرجنتين</item>
+        <item>أرمينيا</item>
+        <item>أروبا</item>
+        <item>أستراليا</item>
+        <item>النمسا</item>
+        <item>أذربيجان</item>
+        <item>الباهاما</item>
+        <item>البحرين</item>
+        <item>بنغلاديش</item>
+        <item>بربادوس</item>
+        <item>بيلاروسيا</item>
+        <item>بلجيكا</item>
+        <item>بليز</item>
+        <item>بنين</item>
+        <item>برمودا</item>
+        <item>بوتان</item>
+        <item>بوليفيا</item>
+        <item>البوسنة والهرسك</item>
+        <item>بوتسوانا</item>
+        <item>جزيرة بوفيه</item>
+        <item>البرازيل</item>
+        <item>إقليم المحيط الهندي البريطاني</item>
+        <item>بروناي دار السلام</item>
+        <item>بلغاريا</item>
+        <item>بوركينا فاسو</item>
+        <item>بوروندي</item>
+        <item>كمبوديا</item>
+        <item>الكاميرون</item>
+        <item>كندا</item>
+        <item>الرأس الأخضر</item>
+        <item>جزر كايمان</item>
+        <item>جمهورية إفريقيا الوسطى</item>
+        <item>تشاد</item>
+        <item>تشيلي</item>
+        <item>الصين</item>
+        <item>جزيرة الكريسماس</item>
+        <item>جزر كوكوس (كيلينغ)</item>
+        <item>كولومبيا</item>
+        <item>جزر القمر</item>
+        <item>الكونغو</item>
+        <item>جمهورية الكونغو الديمقراطية</item>
+        <item>جزر كوك</item>
+        <item>كوستاريكا</item>
+        <item>ساحل العاج</item>
+        <item>كرواتيا</item>
+        <item>كوبا</item>
+        <item>قبرص</item>
+        <item>الجمهورية التشيكية</item>
+        <item>الدنمارك</item>
+        <item>جيبوتي</item>
+        <item>دومينيكا</item>
+        <item>جمهورية الدومينيكان</item>
+        <item>الإكوادور</item>
+        <item>مصر</item>
+        <item>السلفادور</item>
+        <item>غينيا الاستوائية</item>
+        <item>إريتريا</item>
+        <item>إستونيا</item>
+        <item>إثيوبيا</item>
+        <item>جزر فوكلاند (مالفيناس)</item>
+        <item>جزر فارو</item>
+        <item>فيجي</item>
+        <item>فنلندا</item>
+        <item>فرنسا</item>
+        <item>غويانا الفرنسية</item>
+        <item>بولينيزيا الفرنسية</item>
+        <item>الأقاليم الجنوبية الفرنسية</item>
+        <item>الغابون</item>
+        <item>غامبيا</item>
+        <item>جورجيا</item>
+        <item>ألمانيا</item>
+        <item>غانا</item>
+        <item>جبل طارق</item>
+        <item>اليونان</item>
+        <item>غرينلاند</item>
+        <item>غرينادا</item>
+        <item>جوادلوب</item>
+        <item>غوام</item>
+        <item>غواتيمالا</item>
+        <item>غيرنزي</item>
+        <item>غينيا</item>
+        <item>غينيا بيساو</item>
+        <item>غيانا</item>
+        <item>هايتي</item>
+        <item>جزيرة هيرد وجزر ماكدونالد</item>
+        <item>الكرسي الرسولي (دولة الفاتيكان)</item>
+        <item>هندوراس</item>
+        <item>هونغ كونغ</item>
+        <item>هنغاريا</item>
+        <item>أيسلندا</item>
+        <item>الهند</item>
+        <item>إندونيسيا</item>
+        <item>إيران (جمهورية إيران الإسلامية)</item>
+        <item>العراق</item>
+        <item>أيرلندا</item>
+        <item>جزيرة مان</item>
+        <item>إسرائيل</item>
+        <item>إيطاليا</item>
+        <item>جامايكا</item>
+        <item>اليابان</item>
+        <item>جيرسي</item>
+        <item>الأردن</item>
+        <item>كازاخستان</item>
+        <item>كينيا</item>
+        <item>كيريباس</item>
+        <item>كوريا (جمهورية كوريا الديمقراطية الشعبية)</item>
+        <item>كوريا (جمهورية كوريا الجنوبية)</item>
+        <item>كوسوفو</item>
+        <item>الكويت</item>
+        <item>قيرغيزستان</item>
+        <item>لاوس</item>
+        <item>لاتفيا</item>
+        <item>لبنان</item>
+        <item>ليسوتو</item>
+        <item>ليبيريا</item>
+        <item>الجماهيرية العربية الليبية</item>
+        <item>ليختنشتاين</item>
+        <item>ليتوانيا</item>
+        <item>لوكسمبورغ</item>
+        <item>ماكاو</item>
+        <item>مقدونيا</item>
+        <item>مدغشقر</item>
+        <item>مالاوي</item>
+        <item>ماليزيا</item>
+        <item>المالديف</item>
+        <item>مالي</item>
+        <item>مالطا</item>
+        <item>جزر مارشال</item>
+        <item>مارتينيك</item>
+        <item>موريتانيا</item>
+        <item>موريشيوس</item>
+        <item>مايوت</item>
+        <item>المكسيك</item>
+        <item>ميكرونيزيا (ولايات ميكرونيزيا الموحدة)</item>
+        <item>مولدوفا</item>
+        <item>موناكو</item>
+        <item>منغوليا</item>
+        <item>الجبل الأسود</item>
+        <item>مونتسرات</item>
+        <item>المغرب</item>
+        <item>موزمبيق</item>
+        <item>ميانمار</item>
+        <item>ناميبيا</item>
+        <item>ناورو</item>
+        <item>نيبال</item>
+        <item>هولندا</item>
+        <item>جزر الأنتيل الهولندية</item>
+        <item>كاليدونيا الجديدة</item>
+        <item>نيوزيلندا</item>
+        <item>نيكاراغوا</item>
+        <item>النيجر</item>
+        <item>نيجيريا</item>
+        <item>نييوي</item>
+        <item>جزيرة نورفولك</item>
+        <item>جزر ماريانا الشمالية</item>
+        <item>النرويج</item>
+        <item>عمان</item>
+        <item>باكستان</item>
+        <item>بالاو</item>
+        <item>فلسطين (الأراضي الفلسطينية المحتلة)</item>
+        <item>بنما</item>
+        <item>بابوا غينيا الجديدة</item>
+        <item>باراغواي</item>
+        <item>بيرو</item>
+        <item>الفلبين</item>
+        <item>بيتكيرن</item>
+        <item>بولندا</item>
+        <item>البرتغال</item>
+        <item>بورتوريكو</item>
+        <item>قطر</item>
+        <item>ريونيون</item>
+        <item>رومانيا</item>
+        <item>روسيا</item>
+        <item>رواندا</item>
+        <item>سانت بارتيليمي</item>
+        <item>سانت هيلانة، أسينسيون، وتريستان دا كونها</item>
+        <item>سانت كيتس ونيفيس</item>
+        <item>سانت لوسيا</item>
+        <item>سانت مارتن (الجزء الفرنسي)</item>
+        <item>سانت بيير وميكلون</item>
+        <item>سانت فنسنت وجزر غرينادين</item>
+        <item>ساموا</item>
+        <item>سان مارينو</item>
+        <item>ساو تومي وبرينسيبي</item>
+        <item>المملكة العربية السعودية</item>
+        <item>السنغال</item>
+        <item>صربيا</item>
+        <item>سيشيل</item>
+        <item>سيراليون</item>
+        <item>سنغافورة</item>
+        <item>سلوفاكيا</item>
+        <item>سلوفينيا</item>
+        <item>جزر سليمان</item>
+        <item>الصومال</item>
+        <item>جنوب أفريقيا</item>
+        <item>جورجيا الجنوبية وجزر ساندويتش الجنوبية</item>
+        <item>جنوب السودان</item>
+        <item>إسبانيا</item>
+        <item>سريلانكا</item>
+        <item>السودان</item>
+        <item>سورينام</item>
+        <item>سفالبارد وجان مايان</item>
+        <item>سوازيلاند</item>
+        <item>السويد</item>
+        <item>سويسرا</item>
+        <item>الجمهورية العربية السورية</item>
+        <item>تايوان</item>
+        <item>طاجيكستان</item>
+        <item>تنزانيا، جمهورية تنزانيا المتحدة</item>
+        <item>تايلاند</item>
+        <item>تيمور- ليشتي</item>
+        <item>توغو</item>
+        <item>توكيلاو</item>
+        <item>تونغا</item>
+        <item>ترينيداد وتوباغو</item>
+        <item>تونس</item>
+        <item>تركيا</item>
+        <item>تركمانستان</item>
+        <item>جزر تركس وكايكوس</item>
+        <item>توفالو</item>
+        <item>أوغندا</item>
+        <item>أوكرانيا</item>
+        <item>الإمارات العربية المتحدة</item>
+        <item>المملكة المتحدة</item>
+        <item>الولايات المتحدة</item>
+        <item>جزر الولايات المتحدة الصغيرة النائية</item>
+        <item>الأوروغواي</item>
+        <item>أوزبكستان</item>
+        <item>فانواتو</item>
+        <item>فنزويلا، جمهورية فنزويلا البوليفارية</item>
+        <item>فيتنام</item>
+        <item>جزر العذراء البريطانية</item>
+        <item>جزر العذراء الأمريكية</item>
+        <item>واليس وفوتونا</item>
+        <item>الصحراء الغربية</item>
+        <item>اليمن</item>
+        <item>زامبيا</item>
+        <item>زيمبابوي</item>
+    </string-array>
+
+    <string-array name="marital_status">
+        <item>أعزب</item>
+        <item>متزوج</item>
+        <item>مطلق</item>
+        <item>أرمل</item>
+    </string-array>
+
 </resources>

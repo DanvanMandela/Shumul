@@ -337,6 +337,15 @@ fun accountOpeningFunc(
         map["INFOFIELD31"] = accountOpening.more?.income
         map["INFOFIELD32"] = accountOpening.more?.residence
         map["INFOFIELD33"] = accountOpening.more?.emergency
+        map["INFOFIELD34"] = accountOpening.personal?.nationality
+        map["INFOFIELD35"] = accountOpening.personal?.marital
+        map["INFOFIELD36"] = accountOpening.more?.education
+        map["INFOFIELD37"] = accountOpening.more?.deposit
+        map["INFOFIELD38"] = accountOpening.more?.withdraw
+        map["INFOFIELD39"] = accountOpening.more?.total
+        map["INFOFIELD40"] = accountOpening.more?.country
+        map["INFOFIELD41"] = accountOpening.more?.address
+        map["INFOFIELD42"] = accountOpening.more?.landline
 
         map["MOBILENUMBER"] = mobile
         map["AGENTID"] = agentId

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
@@ -60,6 +62,7 @@ fun AgentMenu(data: MenuItem, action: (route: NavigateTo) -> Unit) {
                 fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
                 style = MaterialTheme.typography.labelSmall,
                 textAlign = TextAlign.Center,
+                maxLines = 2,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 1.dp)
@@ -73,7 +76,9 @@ fun AgentMenu(data: MenuItem, action: (route: NavigateTo) -> Unit) {
 fun AgentMenus(
     action: (route: NavigateTo) -> Unit
 ) {
-    BoxWithConstraints {
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp.dp
+    BoxWithConstraints(modifier = Modifier.width(screenWidthDp)) {
         val width = this.maxWidth
         val itemSize: Dp = width / 4
         FlowRow(

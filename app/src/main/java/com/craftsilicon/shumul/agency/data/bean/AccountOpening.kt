@@ -42,6 +42,9 @@ data class PersonalDetail(
     val email: String?,
     @field:Expose
     val gender: String?,
+    @field:Expose
+    val marital: String?,
+    val nationality: String?,
 )
 
 @Singleton

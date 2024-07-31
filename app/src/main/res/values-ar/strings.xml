@@ -178,4 +178,7 @@
     <string name="agent_account_">حساب الوكيل</string>
     <string name="enter_agent_account_number">أدخل رقم حساب الوكيل</string>
     <string name="total_income_">إجمالي الدخل</string>
+    <string name="country_name">اليمن</string>
+    <string name="land_line_">رقم الهاتف ( الأرضي)</string>
+
 </resources>
