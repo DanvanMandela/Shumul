@@ -1,6 +1,7 @@
 package com.craftsilicon.shumul.agency.ui.module.account
 
 import android.graphics.Bitmap
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -64,11 +65,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.canhub.cropper.CropImageContract
 import com.craftsilicon.shumul.agency.R
+import com.craftsilicon.shumul.agency.data.permission.CameraUtil.capturedImage
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.compressBitmap
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.compressImage
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.convert
 import com.craftsilicon.shumul.agency.data.permission.ImageCallback
+import com.craftsilicon.shumul.agency.data.permission.imageOption
 import com.craftsilicon.shumul.agency.data.security.APP.BANK_ID
 import com.craftsilicon.shumul.agency.data.security.APP.country
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
@@ -95,6 +99,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AccountOpeningDocumentModule(data: GlobalData) {
 
+
     val context = LocalContext.current
     val work = hiltViewModel<WorkViewModel>()
     val owner = LocalLifecycleOwner.current
@@ -106,6 +111,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
     val scope = rememberCoroutineScope()
     val user = model.preferences.userData.collectAsState().value
     val accountOpen = model.preferences.accountOpen.collectAsState().value
+
 
     var moduleCall: ModuleCall by remember {
         mutableStateOf(Response.Confirm)
@@ -146,6 +152,31 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
 
     var action: () -> Unit = {}
 
+    val sayCheese: MutableState<SayCheese> = remember {
+        mutableStateOf(SayCheese.IdFront)
+    }
+    val launcher = rememberLauncherForActivityResult(CropImageContract()) { result ->
+        try {
+            if (result.isSuccessful) {
+                val uriContent = result.uriContent
+                if (uriContent != null) {
+                    val image = context.capturedImage(uriContent)
+                    when (sayCheese.value) {
+                        SayCheese.IdBack -> idBack.value = compressImage(image)
+                        SayCheese.Selfie -> passport.value = compressImage(image)
+                        SayCheese.Signature -> signature.value = compressImage(image)
+                        SayCheese.IdFront -> idFront.value = compressImage(image)
+                    }
+                }
+            } else {
+                val exception = result.error
+                AppLogger.instance.appLog("CROPPER:ERROR", "${exception?.localizedMessage}")
+            }
+        } catch (e: Exception) {
+            e.localizedMessage?.let { AppLogger.instance.appLog("CROPPER:ERROR", it) }
+        }
+
+    }
 
 
     Box {
@@ -205,7 +236,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                                         R.string.enter_expire_date
                                                     )
                                                 )
-                                            }else if (special.isEmpty()) {
+                                            } else if (special.isEmpty()) {
                                                 snackState.showSnackbar(
                                                     context.getString(
                                                         R.string.select_special_officer_
@@ -360,13 +391,8 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                 onClick = {
                                     model.permission.imageAccess { permission ->
                                         if (permission) {
-                                            data.callback?.onImage(object : ImageCallback {
-                                                override fun onImage(bitmap: Bitmap?, uri: String) {
-                                                    if (bitmap != null) {
-                                                        passport.value = compressImage(bitmap)
-                                                    }
-                                                }
-                                            })
+                                            sayCheese.value = SayCheese.Selfie
+                                            launcher.imageOption()
                                         }
                                     }
                                 },
@@ -419,13 +445,8 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                 onClick = {
                                     model.permission.imageAccess { permission ->
                                         if (permission) {
-                                            data.callback?.onImage(object : ImageCallback {
-                                                override fun onImage(bitmap: Bitmap?, uri: String) {
-                                                    if (bitmap != null) {
-                                                        signature.value = compressImage(bitmap)
-                                                    }
-                                                }
-                                            })
+                                            sayCheese.value = SayCheese.Signature
+                                            launcher.imageOption()
                                         }
                                     }
                                 },
@@ -476,13 +497,8 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                 onClick = {
                                     model.permission.imageAccess { permission ->
                                         if (permission) {
-                                            data.callback?.onImage(object : ImageCallback {
-                                                override fun onImage(bitmap: Bitmap?, uri: String) {
-                                                    if (bitmap != null) {
-                                                        idFront.value = compressImage(bitmap)
-                                                    }
-                                                }
-                                            })
+                                            sayCheese.value = SayCheese.IdFront
+                                            launcher.imageOption()
                                         }
                                     }
                                 },
@@ -533,13 +549,8 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                 onClick = {
                                     model.permission.imageAccess { permission ->
                                         if (permission) {
-                                            data.callback?.onImage(object : ImageCallback {
-                                                override fun onImage(bitmap: Bitmap?, uri: String) {
-                                                    if (bitmap != null) {
-                                                        idBack.value = compressImage(bitmap)
-                                                    }
-                                                }
-                                            })
+                                            sayCheese.value = SayCheese.IdBack
+                                            launcher.imageOption()
                                         }
                                     }
                                 },
@@ -776,5 +787,9 @@ data object ResponseDialog : DocumentDialog()
 data class DateDialog(val who: DialogWho) : DocumentDialog()
 data object NothingShow : DocumentDialog()
 
+
+enum class SayCheese {
+    IdBack, Selfie, Signature, IdFront
+}
 
 

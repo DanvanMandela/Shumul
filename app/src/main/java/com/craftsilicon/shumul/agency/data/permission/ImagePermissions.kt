@@ -59,7 +59,7 @@ object CameraUtil {
     fun compressImage(image: Bitmap): Bitmap? {
         return try {
             val stream = ByteArrayOutputStream()
-            image.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            image.compress(Bitmap.CompressFormat.JPEG, 50, stream)
             var options = 20
             while (stream.toByteArray().size / 1024 > 100) { // 100kb,
                 stream.reset()
