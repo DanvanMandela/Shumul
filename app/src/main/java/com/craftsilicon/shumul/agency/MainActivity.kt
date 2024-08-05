@@ -55,16 +55,21 @@ class MainActivity : ComponentActivity(), AppCallback {
     private var imageCallback: ImageCallback? = null
 
     private val cropImage = registerForActivityResult(CropImageContract()) { result ->
-        if (result != null && result.isSuccessful) {
-            val uriFilePath = result.getUriFilePath(this)
-            if (!uriFilePath.isNullOrBlank()) {
-                val image = getImageFromStorage(uriFilePath)
-                imageCallback?.onImage(image, uriFilePath)
+        try {
+            if (result.isSuccessful) {
+                val uriFilePath = result.getUriFilePath(this)
+                if (!uriFilePath.isNullOrBlank()) {
+                    val image = getImageFromStorage(uriFilePath)
+                    imageCallback?.onImage(image, uriFilePath)
+                }
+            } else {
+                val exception = result.error
+                AppLogger.instance.appLog("CROPPER:ERROR", "${exception?.localizedMessage}")
             }
-        } else {
-            val exception = result.error
-            AppLogger.instance.appLog("COPPER:ERROR", "${exception?.printStackTrace()}")
+        } catch (e: Exception) {
+            e.localizedMessage?.let { AppLogger.instance.appLog("CROPPER:ERROR", it) }
         }
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

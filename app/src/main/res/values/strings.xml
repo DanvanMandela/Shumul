@@ -178,5 +178,12 @@
     <string name="total_income_">Total Income</string>
     <string name="country_name">Yemen</string>
     <string name="land_line_">Landline Phone Number</string>
+    <string name="can_send_greeting_">Can Send Greetings</string>
+    <string name="can_special_associate_officer_">Can Send Associate Special Offer</string>
+    <string name="can_send_special_officer_">Can Send Our Special Offers</string>
+    <string name="statement_online_">Statement Online</string>
+    <string name="mobile_alert_">Mobile Alert</string>
+    <string name="special_officer">Special Officer</string>
+    <string name="select_special_officer_">Select special officer</string>
 
 </resources>

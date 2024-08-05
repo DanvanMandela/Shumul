@@ -328,7 +328,8 @@ fun AccountOpeningMoreDetail(data: GlobalData) {
                                                     country = country,
                                                     address = address,
                                                     occupation = occupation,
-                                                    total = total
+                                                    total = total,
+                                                    landline = landline
 
                                                 )
                                                 if (accountOpen != null) {

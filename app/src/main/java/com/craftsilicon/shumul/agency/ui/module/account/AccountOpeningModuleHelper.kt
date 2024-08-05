@@ -292,6 +292,7 @@ fun workSectorFunc(
 
 fun accountOpeningFunc(
     date: HashMap<String, String?>,
+    officer: HashMap<String, String?>,
     accountOpening: AccountOpening,
     account: String,
     branch: String,
@@ -329,24 +330,24 @@ fun accountOpeningFunc(
         map["INFOFIELD15"] = accountOpening.more?.city
         map["INFOFIELD20"] = date["expires"]
         map["INFOFIELD21"] = accountOpening.more?.occupation
-        map["INFOFIELD26"] = accountOpening.more?.sector
-        map["INFOFIELD27"] = accountOpening.more?.job
+        map["INFOFIELD26"] = accountOpening.more?.sector //Work sector
+        map["INFOFIELD27"] = accountOpening.more?.job //Job Title
         map["INFOFIELD28"] = date["issued"]
-        map["INFOFIELD29"] = accountOpening.more?.employer
-        map["INFOFIELD30"] = accountOpening.more?.monthly
-        map["INFOFIELD31"] = accountOpening.more?.income
+        map["INFOFIELD29"] = accountOpening.more?.employer //Employer Name
+        map["INFOFIELD30"] = accountOpening.more?.monthly // Monthly Income
+        map["INFOFIELD31"] = accountOpening.more?.income //Source Income
         map["INFOFIELD32"] = accountOpening.more?.residence
-        map["INFOFIELD33"] = accountOpening.more?.emergency
+        map["INFOFIELD33"] = accountOpening.more?.emergency //Emergency contact number
         map["INFOFIELD34"] = accountOpening.personal?.nationality
         map["INFOFIELD35"] = accountOpening.personal?.marital
         map["INFOFIELD36"] = accountOpening.more?.education
-        map["INFOFIELD37"] = accountOpening.more?.deposit
-        map["INFOFIELD38"] = accountOpening.more?.withdraw
-        map["INFOFIELD39"] = accountOpening.more?.total
+        map["INFOFIELD37"] = accountOpening.more?.deposit //Maximum Expected Deposit Amount
+        map["INFOFIELD38"] = accountOpening.more?.withdraw //Maximum Expected Withdraw Amount
+        map["INFOFIELD39"] = accountOpening.more?.total //Total income
         map["INFOFIELD40"] = accountOpening.more?.country
         map["INFOFIELD41"] = accountOpening.more?.address
         map["INFOFIELD42"] = accountOpening.more?.landline
-
+        map["INFOFIELD43"] = officer.map { it.value }.joinToString("~") //Special officer
         map["MOBILENUMBER"] = mobile
         map["AGENTID"] = agentId
         map["CALLTYPE"] = "B-"

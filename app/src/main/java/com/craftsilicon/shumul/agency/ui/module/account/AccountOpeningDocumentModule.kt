@@ -65,6 +65,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.craftsilicon.shumul.agency.R
+import com.craftsilicon.shumul.agency.data.permission.CameraUtil.compressBitmap
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.convert
 import com.craftsilicon.shumul.agency.data.permission.ImageCallback
 import com.craftsilicon.shumul.agency.data.security.APP.BANK_ID
@@ -76,6 +77,8 @@ import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
+import com.craftsilicon.shumul.agency.ui.module.account.selection.MultipleSelection
+import com.craftsilicon.shumul.agency.ui.module.account.selection.specialOfficer
 import com.craftsilicon.shumul.agency.ui.module.statement.toElmaDate
 import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
 import com.craftsilicon.shumul.agency.ui.navigation.Module
@@ -122,6 +125,10 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
         mutableStateOf(null)
     }
 
+    var special: HashMap<String, String?> = remember {
+        hashMapOf()
+    }
+
     val idBack: MutableState<Bitmap?> = remember {
         mutableStateOf(null)
     }
@@ -136,17 +143,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
     }
 
 
-
     var action: () -> Unit = {}
-
-//    val actions: MutableState<() -> Unit> = remember {
-//        mutableStateOf({})
-//    }
-//    LaunchedEffect(key1 = actions.value) {
-//
-//    }
-
-
 
 
 
@@ -205,6 +202,12 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                                 snackState.showSnackbar(
                                                     context.getString(
                                                         R.string.enter_expire_date
+                                                    )
+                                                )
+                                            }else if (special.isEmpty()) {
+                                                snackState.showSnackbar(
+                                                    context.getString(
+                                                        R.string.select_special_officer_
                                                     )
                                                 )
                                             } else {
@@ -359,7 +362,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                             data.callback?.onImage(object : ImageCallback {
                                                 override fun onImage(bitmap: Bitmap?, uri: String) {
                                                     if (bitmap != null) {
-                                                        passport.value = bitmap
+                                                        passport.value = compressBitmap(bitmap)
                                                     }
                                                 }
                                             })
@@ -418,7 +421,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                             data.callback?.onImage(object : ImageCallback {
                                                 override fun onImage(bitmap: Bitmap?, uri: String) {
                                                     if (bitmap != null) {
-                                                        signature.value = bitmap
+                                                        signature.value = compressBitmap(bitmap)
                                                     }
                                                 }
                                             })
@@ -475,7 +478,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                             data.callback?.onImage(object : ImageCallback {
                                                 override fun onImage(bitmap: Bitmap?, uri: String) {
                                                     if (bitmap != null) {
-                                                        idFront.value = bitmap
+                                                        idFront.value = compressBitmap(bitmap)
                                                     }
                                                 }
                                             })
@@ -532,7 +535,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                             data.callback?.onImage(object : ImageCallback {
                                                 override fun onImage(bitmap: Bitmap?, uri: String) {
                                                     if (bitmap != null) {
-                                                        idBack.value = bitmap
+                                                        idBack.value = compressBitmap(bitmap)
                                                     }
                                                 }
                                             })
@@ -572,6 +575,19 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                                 .clip(RoundedCornerShape(10.dp))
                                         )
 
+                                }
+                            }
+                            Spacer(modifier = Modifier.size(16.dp))
+                            Box(
+                                modifier = Modifier
+                                    .padding(vertical = 8.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                MultipleSelection(
+                                    title = context.getString(R.string.special_officer),
+                                    data = specialOfficer
+                                ) { value ->
+                                    special = value
                                 }
                             }
                             Spacer(modifier = Modifier.size(horizontalModulePadding))
@@ -620,6 +636,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                         "expires" to expires,
                                         "issued" to issuied
                                     ),
+                                    officer = special,
                                     branch = "${user?.account?.firstOrNull()?.branchId}",
                                     accountOpening = accountOpen!!,
                                     account = "${user?.account?.firstOrNull()?.account}",

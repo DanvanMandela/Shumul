@@ -85,13 +85,12 @@ fun AgentMenus(
             mainAxisSize = SizeMode.Expand,
             mainAxisAlignment = FlowMainAxisAlignment.Start,
             modifier = Modifier
-                .fillMaxSize()
+                .width(width)
                 .background(color = MaterialTheme.colorScheme.background)
         ) {
             agentMenus.forEach {
                 Box(
-                    modifier = Modifier
-                        .size(itemSize)
+                    modifier = Modifier.size(itemSize)
                 ) {
                     AgentMenu(data = it, action = action)
                 }

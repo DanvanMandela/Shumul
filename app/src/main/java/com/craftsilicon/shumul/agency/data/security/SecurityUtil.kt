@@ -68,7 +68,6 @@ object APP {
         action: String,
         uniqueId: String
     ): HashMap<String, Any?> {
-
         return hashMapOf(
             "FormID" to action,
             "APPNAME" to APP_NAME,

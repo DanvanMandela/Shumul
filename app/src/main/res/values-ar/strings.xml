@@ -180,5 +180,11 @@
     <string name="total_income_">إجمالي الدخل</string>
     <string name="country_name">اليمن</string>
     <string name="land_line_">رقم الهاتف ( الأرضي)</string>
-
+    <string name="can_send_greeting_">يمكن أن ترسل تحياتي</string>
+    <string name="can_special_associate_officer_">يمكن إرسال عرض خاص</string>
+    <string name="can_send_special_officer_">أن نرسل عروضنا الخاصة</string>
+    <string name="statement_online_">بيان على الانترنت</string>
+    <string name="mobile_alert_">التنبيه المتنقل</string>
+    <string name="special_officer">عروض خاصة</string>
+    <string name="select_special_officer_">اختر ضابط خاص</string>
 </resources>

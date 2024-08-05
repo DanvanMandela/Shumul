@@ -207,6 +207,7 @@ fun AccountOpeningPersonalDetail(data: GlobalData) {
                                     .fillMaxWidth()
                                     .background(color = MaterialTheme.colorScheme.background)
                             ) {
+
                                 Button(
                                     onClick = {
                                         scope.launch {
@@ -432,7 +433,6 @@ fun AccountOpeningPersonalDetail(data: GlobalData) {
                                     keyboardType = KeyboardType.Text
                                 )
                             )
-
                             Spacer(modifier = Modifier.size(16.dp))
                             Box(
                                 modifier = Modifier

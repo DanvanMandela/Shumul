@@ -57,6 +57,17 @@ object CameraUtil {
         }
     }
 
+    fun compressBitmap(
+        bitmap: Bitmap,
+        format: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG,
+        quality: Int = 50
+    ): Bitmap {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bitmap.compress(format, quality, byteArrayOutputStream)
+        val byteArray = byteArrayOutputStream.toByteArray()
+        return BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+    }
+
     @Throws(IllegalArgumentException::class)
     fun convert(base64Str: String): Bitmap? {
         val decodedBytes: ByteArray = Base64.decode(
