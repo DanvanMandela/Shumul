@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.craftsilicon.shumul.agency.R
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.compressBitmap
+import com.craftsilicon.shumul.agency.data.permission.CameraUtil.compressImage
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.convert
 import com.craftsilicon.shumul.agency.data.permission.ImageCallback
 import com.craftsilicon.shumul.agency.data.security.APP.BANK_ID
@@ -362,7 +363,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                             data.callback?.onImage(object : ImageCallback {
                                                 override fun onImage(bitmap: Bitmap?, uri: String) {
                                                     if (bitmap != null) {
-                                                        passport.value = compressBitmap(bitmap)
+                                                        passport.value = compressImage(bitmap)
                                                     }
                                                 }
                                             })
@@ -421,7 +422,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                             data.callback?.onImage(object : ImageCallback {
                                                 override fun onImage(bitmap: Bitmap?, uri: String) {
                                                     if (bitmap != null) {
-                                                        signature.value = compressBitmap(bitmap)
+                                                        signature.value = compressImage(bitmap)
                                                     }
                                                 }
                                             })
@@ -478,7 +479,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                             data.callback?.onImage(object : ImageCallback {
                                                 override fun onImage(bitmap: Bitmap?, uri: String) {
                                                     if (bitmap != null) {
-                                                        idFront.value = compressBitmap(bitmap)
+                                                        idFront.value = compressImage(bitmap)
                                                     }
                                                 }
                                             })
@@ -535,7 +536,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                             data.callback?.onImage(object : ImageCallback {
                                                 override fun onImage(bitmap: Bitmap?, uri: String) {
                                                     if (bitmap != null) {
-                                                        idBack.value = compressBitmap(bitmap)
+                                                        idBack.value = compressImage(bitmap)
                                                     }
                                                 }
                                             })

@@ -1,6 +1,7 @@
 package com.craftsilicon.shumul.agency
 
 import android.os.Bundle
+import android.provider.MediaStore
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -16,6 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.canhub.cropper.CropImageContract
 import com.craftsilicon.shumul.agency.data.AppCallback
+import com.craftsilicon.shumul.agency.data.permission.CameraUtil.capturedImage
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.getImageFromStorage
 import com.craftsilicon.shumul.agency.data.permission.ImageCallback
 import com.craftsilicon.shumul.agency.data.permission.imageOption
@@ -57,11 +59,20 @@ class MainActivity : ComponentActivity(), AppCallback {
     private val cropImage = registerForActivityResult(CropImageContract()) { result ->
         try {
             if (result.isSuccessful) {
-                val uriFilePath = result.getUriFilePath(this)
-                if (!uriFilePath.isNullOrBlank()) {
-                    val image = getImageFromStorage(uriFilePath)
-                    imageCallback?.onImage(image, uriFilePath)
+
+                val uriContent = result.uriContent
+                //val uriFilePath = result.getUriFilePath(context)
+
+                if (uriContent != null) {
+                    val image = this@MainActivity.capturedImage(uriContent)
+                    imageCallback?.onImage(image, uriContent.toString())
                 }
+
+                //val uriFilePath = result.getUriFilePath(this)
+//                if (!uriFilePath.isNullOrBlank()) {
+//                    val image = getImageFromStorage(uriFilePath)
+//                    imageCallback?.onImage(image, uriFilePath)
+//                }
             } else {
                 val exception = result.error
                 AppLogger.instance.appLog("CROPPER:ERROR", "${exception?.localizedMessage}")
