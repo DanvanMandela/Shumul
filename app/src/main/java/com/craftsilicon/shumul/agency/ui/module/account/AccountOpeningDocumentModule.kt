@@ -435,7 +435,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                     )
 
                                     passportUri.value?.let {
-                                        passport.value = context.capturedImage(it)
+                                        passport.value = compressImage(context.capturedImage(it))
                                         Image(
                                             bitmap = passport.value!!.asImageBitmap(),
                                             contentDescription = null,
@@ -490,7 +490,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                     )
 
                                     signatureUri.value?.let {
-                                        signature.value = context.capturedImage(it)
+                                        signature.value = compressImage(context.capturedImage(it))
                                         Image(
                                             bitmap = signature.value!!.asImageBitmap(),
                                             contentDescription = null,
@@ -546,7 +546,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
 
 
                                     idFrontUri.value?.let {
-                                        idFront.value = context.capturedImage(it)
+                                        idFront.value = compressImage(context.capturedImage(it))
                                         Image(
                                             bitmap = idFront.value!!.asImageBitmap(),
                                             contentDescription = null,
@@ -601,7 +601,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                     )
 
                                     idBackUri.value?.let {
-                                        idBack.value = context.capturedImage(it)
+                                        idBack.value = compressImage(context.capturedImage(it))
                                         Image(
                                             bitmap = idBack.value!!.asImageBitmap(),
                                             contentDescription = null,
