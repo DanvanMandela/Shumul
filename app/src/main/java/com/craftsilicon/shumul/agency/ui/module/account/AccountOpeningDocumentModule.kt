@@ -1,6 +1,7 @@
 package com.craftsilicon.shumul.agency.ui.module.account
 
 import android.graphics.Bitmap
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -99,7 +100,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun AccountOpeningDocumentModule(data: GlobalData) {
 
-
     val context = LocalContext.current
     val work = hiltViewModel<WorkViewModel>()
     val owner = LocalLifecycleOwner.current
@@ -124,11 +124,23 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
         mutableStateOf(null)
     }
 
+    val passportUri: MutableState<Uri?> = remember {
+        mutableStateOf(null)
+    }
+
     val signature: MutableState<Bitmap?> = remember {
         mutableStateOf(null)
     }
 
+    val signatureUri: MutableState<Uri?> = remember {
+        mutableStateOf(null)
+    }
+
     val idFront: MutableState<Bitmap?> = remember {
+        mutableStateOf(null)
+    }
+
+    val idFrontUri: MutableState<Uri?> = rememberSaveable {
         mutableStateOf(null)
     }
 
@@ -137,6 +149,10 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
     }
 
     val idBack: MutableState<Bitmap?> = remember {
+        mutableStateOf(null)
+    }
+
+    val idBackUri: MutableState<Uri?> = rememberSaveable {
         mutableStateOf(null)
     }
 
@@ -160,12 +176,11 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
             if (result.isSuccessful) {
                 val uriContent = result.uriContent
                 if (uriContent != null) {
-                    val image = context.capturedImage(uriContent)
                     when (sayCheese.value) {
-                        SayCheese.IdBack -> idBack.value = compressImage(image)
-                        SayCheese.Selfie -> passport.value = compressImage(image)
-                        SayCheese.Signature -> signature.value = compressImage(image)
-                        SayCheese.IdFront -> idFront.value = compressImage(image)
+                        SayCheese.IdBack -> idBackUri.value = uriContent
+                        SayCheese.Selfie -> passportUri.value = uriContent
+                        SayCheese.Signature -> signatureUri.value = uriContent
+                        SayCheese.IdFront -> idFrontUri.value = uriContent
                     }
                 }
             } else {
@@ -419,7 +434,8 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                         modifier = Modifier.align(Alignment.Center)
                                     )
 
-                                    if (passport.value != null)
+                                    passportUri.value?.let {
+                                        passport.value = context.capturedImage(it)
                                         Image(
                                             bitmap = passport.value!!.asImageBitmap(),
                                             contentDescription = null,
@@ -430,7 +446,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                                 .clip(RoundedCornerShape(10.dp))
 
                                         )
-
+                                    }
                                 }
                             }
                             Spacer(modifier = Modifier.size(16.dp))
@@ -472,7 +488,9 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                         fontFamily = FontFamily(Font(R.font.montserrat_medium)),
                                         modifier = Modifier.align(Alignment.Center)
                                     )
-                                    if (signature.value != null)
+
+                                    signatureUri.value?.let {
+                                        signature.value = context.capturedImage(it)
                                         Image(
                                             bitmap = signature.value!!.asImageBitmap(),
                                             contentDescription = null,
@@ -482,6 +500,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                                 .matchParentSize()
                                                 .clip(RoundedCornerShape(10.dp))
                                         )
+                                    }
 
                                 }
                             }
@@ -524,7 +543,10 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                         fontFamily = FontFamily(Font(R.font.montserrat_medium)),
                                         modifier = Modifier.align(Alignment.Center)
                                     )
-                                    if (idFront.value != null)
+
+
+                                    idFrontUri.value?.let {
+                                        idFront.value = context.capturedImage(it)
                                         Image(
                                             bitmap = idFront.value!!.asImageBitmap(),
                                             contentDescription = null,
@@ -534,6 +556,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                                 .matchParentSize()
                                                 .clip(RoundedCornerShape(10.dp))
                                         )
+                                    }
 
                                 }
                             }
@@ -576,7 +599,9 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                         fontFamily = FontFamily(Font(R.font.montserrat_medium)),
                                         modifier = Modifier.align(Alignment.Center)
                                     )
-                                    if (idBack.value != null)
+
+                                    idBackUri.value?.let {
+                                        idBack.value = context.capturedImage(it)
                                         Image(
                                             bitmap = idBack.value!!.asImageBitmap(),
                                             contentDescription = null,
@@ -586,6 +611,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                                 .matchParentSize()
                                                 .clip(RoundedCornerShape(10.dp))
                                         )
+                                    }
 
                                 }
                             }

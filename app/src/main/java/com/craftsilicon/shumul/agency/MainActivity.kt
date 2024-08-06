@@ -1,7 +1,6 @@
 package com.craftsilicon.shumul.agency
 
 import android.os.Bundle
-import android.provider.MediaStore
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -18,7 +17,6 @@ import androidx.navigation.compose.rememberNavController
 import com.canhub.cropper.CropImageContract
 import com.craftsilicon.shumul.agency.data.AppCallback
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.capturedImage
-import com.craftsilicon.shumul.agency.data.permission.CameraUtil.getImageFromStorage
 import com.craftsilicon.shumul.agency.data.permission.ImageCallback
 import com.craftsilicon.shumul.agency.data.permission.imageOption
 import com.craftsilicon.shumul.agency.data.source.model.LocalViewModelImpl
