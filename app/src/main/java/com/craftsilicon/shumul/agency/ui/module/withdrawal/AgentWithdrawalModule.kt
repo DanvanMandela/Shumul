@@ -208,7 +208,7 @@ fun AgentWithdrawalModule(function: () -> Unit) {
                             onValueChange = { narration = it },
                             label = {
                                 Text(
-                                    text = currency,
+                                    text = stringResource(id = R.string.narration_),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontFamily = FontFamily(Font(R.font.montserrat_medium))
                                 )
@@ -246,7 +246,7 @@ fun AgentWithdrawalModule(function: () -> Unit) {
                             ),
                             suffix = {
                                 Text(
-                                    text = stringResource(id = R.string.currency_symbol_),
+                                    text = currency,
                                     style = MaterialTheme.typography.labelLarge,
                                     fontFamily = FontFamily(Font(R.font.montserrat_semi_bold))
                                 )

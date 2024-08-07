@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.craftsilicon.shumul.agency.R
+import com.craftsilicon.shumul.agency.data.bean.Account
 import com.craftsilicon.shumul.agency.data.bean.ValidationBean
 import com.craftsilicon.shumul.agency.data.security.APP
 import com.craftsilicon.shumul.agency.data.security.ActivationData
@@ -56,12 +58,13 @@ import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
 import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
+import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
+import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
-import com.craftsilicon.shumul.agency.ui.module.withdrawal.customerOtpTransactionCompleteFunc
 import com.craftsilicon.shumul.agency.ui.module.withdrawal.otpTransactionCompleteFunc
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
@@ -70,6 +73,7 @@ import com.craftsilicon.shumul.agency.ui.util.MoneyVisualTransformation
 import com.craftsilicon.shumul.agency.ui.util.countryCode
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @Composable
@@ -85,16 +89,22 @@ fun AccountToCashRedeem(function: () -> Unit) {
     val user = model.preferences.userData.collectAsState().value
     val scope = rememberCoroutineScope()
 
+    val accountState = model.preferences.currentAccount.collectAsState().value
+    val agentAccounts = remember { SnapshotStateList<DropDownResult>() }
+    val agentAccount: MutableState<Account?> = remember {
+        mutableStateOf(null)
+    }
+    var currency by rememberSaveable {
+        mutableStateOf(context.getString(R.string.currency_symbol_))
+    }
 
     val validationData: MutableState<ValidationBean?> = remember {
         mutableStateOf(null)
     }
 
-    var receiverMobile by rememberSaveable {
-        mutableStateOf("")
-    }
 
-    var receiverName by rememberSaveable {
+
+    var trace by rememberSaveable {
         mutableStateOf("")
     }
 
@@ -141,12 +151,28 @@ fun AccountToCashRedeem(function: () -> Unit) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Spacer(modifier = Modifier.size(16.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = horizontalModulePadding)
+                        ) {
+                            EditDropDown(
+                                label = stringResource(id = R.string.agent_account_),
+                                data = MutableStateFlow(agentAccounts)
+                            ) { result ->
+                                agentAccount.value = result.key as Account
+                                agentAccount.value?.currency?.let {
+                                    currency = it
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.size(16.dp))
                         OutlinedTextField(
-                            value = receiverName,
-                            onValueChange = { receiverName = it },
+                            value = trace,
+                            onValueChange = { trace = it },
                             label = {
                                 Text(
-                                    text = stringResource(id = R.string.full_name_),
+                                    text = stringResource(id = R.string.trace_no_),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontFamily = FontFamily(Font(R.font.montserrat_medium))
                                 )
@@ -164,37 +190,6 @@ fun AccountToCashRedeem(function: () -> Unit) {
                             )
                         )
                         Spacer(modifier = Modifier.size(16.dp))
-                        OutlinedTextField(
-                            value = receiverMobile,
-                            onValueChange = { receiverMobile = it },
-                            label = {
-                                Text(
-                                    text = stringResource(id = R.string.mobile_number_),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
-                                )
-                            }, modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = horizontalModulePadding),
-                            textStyle = TextStyle(
-                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                fontSize = MaterialTheme.typography.labelLarge.fontSize
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Phone
-                            ), prefix = {
-                                Text(
-                                    text = countryCode(),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold))
-                                )
-                            }
-                        )
-
-                        Spacer(modifier = Modifier.size(16.dp))
-
                         OutlinedTextField(
                             value = amount,
                             onValueChange = { amount = it },
@@ -304,13 +299,14 @@ fun AccountToCashRedeem(function: () -> Unit) {
                         Button(
                             onClick = {
                                 scope.launch {
-                                    if (receiverName.isBlank()) {
+
+                                    if (agentAccount.value == null) {
                                         snackState.showSnackbar(
-                                            context.getString(R.string.enter_full_name_)
+                                            context.getString(R.string.enter_agent_account_number)
                                         )
-                                    } else if (receiverName.isBlank()) {
+                                    }  else if (trace.isBlank()) {
                                         snackState.showSnackbar(
-                                            context.getString(R.string.enter_mobile_number_)
+                                            context.getString(R.string.enter_trace_number_)
                                         )
                                     } else if (amount.isBlank()) {
                                         snackState.showSnackbar(
@@ -329,9 +325,10 @@ fun AccountToCashRedeem(function: () -> Unit) {
 
                                             model.web(
                                                 path = "${model.deviceData?.agent}",
-                                                data = customerOtpTransactionCompleteFunc(
-                                                    toAccount = "account",
-                                                    fromAccount = "${user?.account?.firstOrNull()?.account}",
+                                                data = AccountToCashHelper.redeem(
+                                                    account = "${agentAccount.value?.account}",
+                                                    branch  = "${agentAccount.value?.branchId}",
+                                                    traceNo = trace,
                                                     amount = amount,
                                                     mobile = "${user?.mobile}",
                                                     agentId = "${user?.account?.firstOrNull()?.agentID}",

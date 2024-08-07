@@ -22,6 +22,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -30,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.craftsilicon.shumul.agency.R
+import com.craftsilicon.shumul.agency.data.bean.Account
 import com.craftsilicon.shumul.agency.data.bean.ValidationBean
 import com.craftsilicon.shumul.agency.data.security.APP
 import com.craftsilicon.shumul.agency.data.security.ActivationData
@@ -56,6 +59,8 @@ import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
 import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
+import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
+import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
@@ -70,10 +75,11 @@ import com.craftsilicon.shumul.agency.ui.util.MoneyVisualTransformation
 import com.craftsilicon.shumul.agency.ui.util.countryCode
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @Composable
-fun  CashToCashRedeem(function: () -> Unit) {
+fun CashToCashRedeem(function: () -> Unit) {
     val context = LocalContext.current
     val work = hiltViewModel<WorkViewModel>()
     val owner = LocalLifecycleOwner.current
@@ -85,6 +91,11 @@ fun  CashToCashRedeem(function: () -> Unit) {
     val user = model.preferences.userData.collectAsState().value
     val scope = rememberCoroutineScope()
 
+    val accountState = model.preferences.currentAccount.collectAsState().value
+    val agentAccounts = remember { SnapshotStateList<DropDownResult>() }
+    val agentAccount: MutableState<Account?> = remember {
+        mutableStateOf(null)
+    }
 
     val validationData: MutableState<ValidationBean?> = remember {
         mutableStateOf(null)
@@ -101,6 +112,9 @@ fun  CashToCashRedeem(function: () -> Unit) {
 
     var amount by rememberSaveable {
         mutableStateOf("")
+    }
+    var currency by rememberSaveable {
+        mutableStateOf(context.getString(R.string.currency_symbol_))
     }
 
     var otp by rememberSaveable {
@@ -122,6 +136,18 @@ fun  CashToCashRedeem(function: () -> Unit) {
 
 
     var action: () -> Unit = {}
+
+    LaunchedEffect(key1 = Unit) {
+        user?.account?.forEach {
+            agentAccounts.add(
+                DropDownResult(
+                    key = it,
+                    desc = it.account,
+                    display = it == accountState
+                )
+            )
+        }
+    }
 
     Box {
         when (screenState) {
@@ -214,7 +240,7 @@ fun  CashToCashRedeem(function: () -> Unit) {
                             ),
                             suffix = {
                                 Text(
-                                    text = stringResource(id = R.string.currency_symbol_),
+                                    text = currency,
                                     style = MaterialTheme.typography.labelLarge,
                                     fontFamily = FontFamily(Font(R.font.montserrat_semi_bold))
                                 )
@@ -329,16 +355,16 @@ fun  CashToCashRedeem(function: () -> Unit) {
 
                                             model.web(
                                                 path = "${model.deviceData?.agent}",
-                                                data = customerOtpTransactionCompleteFunc(
-                                                    toAccount = "account",
-                                                    fromAccount = "${user?.account?.firstOrNull()?.account}",
+                                                data = CashToCashHelper.redeem(
+                                                    account = "${agentAccount.value?.account}",
                                                     amount = amount,
                                                     mobile = "${user?.mobile}",
-                                                    agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                                    agentId = "${agentAccount.value?.agentID}",
                                                     pin = password,
                                                     model = model,
                                                     otp = otp,
-                                                    context = context
+                                                    context = context,
+                                                    name = receiverName
                                                 )!!,
                                                 state = { screenState = it },
                                                 onResponse = { response ->

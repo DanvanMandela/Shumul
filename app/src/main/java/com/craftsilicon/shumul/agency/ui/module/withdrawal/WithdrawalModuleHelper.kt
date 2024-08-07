@@ -181,8 +181,8 @@ fun otpTransactionCompleteFunc(
             action = ActionTypeEnum.COMPLETE_TRANSFER_OTP.action,
             uniqueId = uniqueID
         )
-        map["ACCOUNTID"] = fromAccount
-        map["BANKACCOUNTID"] = toAccount
+        map["ACCOUNTID"] = toAccount
+        map["BANKACCOUNTID"] = fromAccount
         map["MOBILENUMBER"] = mobile
         map["AGENTID"] = agentId
         map["TRXAMOUNT"] = amount

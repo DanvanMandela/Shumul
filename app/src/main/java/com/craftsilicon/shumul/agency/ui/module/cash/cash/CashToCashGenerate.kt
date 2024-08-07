@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -22,6 +24,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -30,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,6 +53,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.craftsilicon.shumul.agency.R
+import com.craftsilicon.shumul.agency.data.bean.Account
 import com.craftsilicon.shumul.agency.data.bean.ValidationBean
 import com.craftsilicon.shumul.agency.data.security.APP
 import com.craftsilicon.shumul.agency.data.security.ActivationData
@@ -56,6 +61,8 @@ import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
 import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
+import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
+import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
@@ -71,6 +78,7 @@ import com.craftsilicon.shumul.agency.ui.util.MoneyVisualTransformation
 import com.craftsilicon.shumul.agency.ui.util.countryCode
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @Composable
@@ -82,6 +90,12 @@ fun CashToCashGenerate(function: () -> Unit) {
     val snackState = remember { SnackbarHostState() }
     var screenState: ModuleState by remember {
         mutableStateOf(ModuleState.DISPLAY)
+    }
+
+    val accountState = model.preferences.currentAccount.collectAsState().value
+    val agentAccounts = remember { SnapshotStateList<DropDownResult>() }
+    val agentAccount: MutableState<Account?> = remember {
+        mutableStateOf(null)
     }
     val user = model.preferences.userData.collectAsState().value
     val scope = rememberCoroutineScope()
@@ -110,6 +124,10 @@ fun CashToCashGenerate(function: () -> Unit) {
         mutableStateOf("")
     }
 
+    var narration by rememberSaveable {
+        mutableStateOf("")
+    }
+
     var moduleCall: ModuleCall by remember {
         mutableStateOf(Response.Confirm)
     }
@@ -121,6 +139,21 @@ fun CashToCashGenerate(function: () -> Unit) {
 
     var password by rememberSaveable {
         mutableStateOf(if (APP.ACTIVATED) ActivationData.AGENT_PIN else "")
+    }
+    var currency by rememberSaveable {
+        mutableStateOf(context.getString(R.string.currency_symbol_))
+    }
+
+    LaunchedEffect(key1 = Unit) {
+        user?.account?.forEach {
+            agentAccounts.add(
+                DropDownResult(
+                    key = it,
+                    desc = it.account,
+                    display = it == accountState
+                )
+            )
+        }
     }
 
 
@@ -140,12 +173,27 @@ fun CashToCashGenerate(function: () -> Unit) {
                     Column(
                         modifier = Modifier
                             .background(MaterialTheme.colorScheme.background)
-                            .fillMaxSize(),
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-
                         Spacer(modifier = Modifier.size(16.dp))
-
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = horizontalModulePadding)
+                        ) {
+                            EditDropDown(
+                                label = stringResource(id = R.string.agent_account_),
+                                data = MutableStateFlow(agentAccounts)
+                            ) { result ->
+                                agentAccount.value = result.key as Account
+                                agentAccount.value?.currency?.let {
+                                    currency = it
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.size(16.dp))
                         OutlinedTextField(
                             value = senderName,
                             onValueChange = { senderName = it },
@@ -223,6 +271,29 @@ fun CashToCashGenerate(function: () -> Unit) {
                         )
                         Spacer(modifier = Modifier.size(16.dp))
                         OutlinedTextField(
+                            value = narration,
+                            onValueChange = { narration = it },
+                            label = {
+                                Text(
+                                    text = stringResource(id = R.string.narration_),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
+                                )
+                            }, modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = horizontalModulePadding),
+                            textStyle = TextStyle(
+                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                fontSize = MaterialTheme.typography.labelLarge.fontSize
+                            ),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Text
+                            )
+                        )
+                        Spacer(modifier = Modifier.size(16.dp))
+                        OutlinedTextField(
                             value = receiverMobile,
                             onValueChange = { receiverMobile = it },
                             label = {
@@ -271,7 +342,7 @@ fun CashToCashGenerate(function: () -> Unit) {
                             ),
                             suffix = {
                                 Text(
-                                    text = stringResource(id = R.string.currency_symbol_),
+                                    text = currency,
                                     style = MaterialTheme.typography.labelLarge,
                                     fontFamily = FontFamily(Font(R.font.montserrat_semi_bold))
                                 )
@@ -330,7 +401,11 @@ fun CashToCashGenerate(function: () -> Unit) {
                         Button(
                             onClick = {
                                 scope.launch {
-                                    if (senderName.isBlank()) {
+                                    if (agentAccount.value == null) {
+                                        snackState.showSnackbar(
+                                            context.getString(R.string.enter_agent_account_number)
+                                        )
+                                    } else if (senderName.isBlank()) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_sender_name_)
                                         )
@@ -354,24 +429,30 @@ fun CashToCashGenerate(function: () -> Unit) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_pin_)
                                         )
+                                    } else if (narration.isBlank()) {
+                                        snackState.showSnackbar(
+                                            context.getString(R.string.enter_narration_)
+                                        )
                                     } else {
                                         action = {
                                             model.web(
                                                 path = "${model.deviceData?.agent}",
-                                                data = otpTransactionFunc(
-                                                    toAccount = senderName,
-                                                    fromAccount = "${user?.account?.firstOrNull()?.account}",
+                                                data = CashToCashHelper.generate(
+                                                    fromName = senderName,
+                                                    toName = receiverName,
+                                                    fromAccount = "${agentAccount.value?.account}",
                                                     amount = amount,
-                                                    mobile = "${user?.mobile}",
-                                                    narration = receiverName,
-                                                    agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                                    mobile = "${countryCode()}$senderMobile",
+                                                    toMobile = "${countryCode()}$receiverMobile",
+                                                    narration = narration,
+                                                    agentId = "${agentAccount.value?.agentID}",
                                                     pin = password,
                                                     model = model,
                                                     context = context
                                                 )!!,
                                                 state = { screenState = it },
                                                 onResponse = { response ->
-                                                    ValidationModuleResponse(
+                                                    CashToCashHelper.response(
                                                         response = response,
                                                         model = model,
                                                         onError = { error ->
@@ -428,6 +509,7 @@ fun CashToCashGenerate(function: () -> Unit) {
                                 style = MaterialTheme.typography.bodyLarge,
                             )
                         }
+                        Spacer(modifier = Modifier.size(horizontalModulePadding))
 
                     }
                 }

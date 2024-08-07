@@ -40,13 +40,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.craftsilicon.shumul.agency.R
 import com.craftsilicon.shumul.agency.data.bean.ValidationBean
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil
-import com.craftsilicon.shumul.agency.data.permission.CameraUtil.isBase64String
 import com.craftsilicon.shumul.agency.ui.util.formatMoney
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 

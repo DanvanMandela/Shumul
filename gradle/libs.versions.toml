@@ -2,7 +2,7 @@
 accompanistSystemuicontroller = "0.28.0"
 accompanistFlowlayout = "0.27.1"
 accompanistPagerIndicators = "0.30.0"
-agp = "8.4.2"
+agp = "8.5.0"
 biometric = "1.2.0-alpha05"
 coilCompose = "2.2.2"
 composeShimmer = "1.0.3"
@@ -14,7 +14,7 @@ navigationCompose="2.7.7"
 constraintlayoutCompose = "1.0.1"
 datastore = "1.1.1"
 dexter = "6.2.3"
-kotlin = "1.9.23"
+kotlin = "2.0.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -26,7 +26,7 @@ composeBom = "2024.06.00"
 hiltVersion = "2.49"
 androidImageCropper = "4.3.3"
 hiltAndroidxVersion = "1.2.0"
-kspVersion = "1.9.23-1.0.19"
+kspVersion = "2.0.0-1.0.23"
 lottieCompose = "6.1.0"
 multidex = "2.0.1"
 protobufJavaUtil = "3.23.2"
@@ -123,6 +123,7 @@ androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hiltVersion" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "kspVersion" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 protobuf={id="com.google.protobuf",version.ref="protobufGradle"}
 googleGmsGoogleServices = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
 googleFirebaseCrashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleFirebaseCrashlytics" }
