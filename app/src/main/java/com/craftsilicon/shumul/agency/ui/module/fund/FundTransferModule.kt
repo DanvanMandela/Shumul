@@ -412,7 +412,7 @@ fun FundTransferModule(data: GlobalData) {
                                                                                         Response.Confirm
                                                                                     validation?.amount =
                                                                                         amount
-                                                                                    validation?.amountNum =
+                                                                                    validation?.account =
                                                                                         toAccount
                                                                                     validation?.extra =
                                                                                         hashMapOf(

@@ -68,7 +68,6 @@ import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
 import com.craftsilicon.shumul.agency.ui.module.validation.ValidationModuleResponse
 import com.craftsilicon.shumul.agency.ui.module.withdrawal.otpTransactionCompleteFunc
-import com.craftsilicon.shumul.agency.ui.module.withdrawal.otpTransactionFunc
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
@@ -353,11 +352,11 @@ fun AccountToCashGenerate(function: () -> Unit) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_receiver_name_)
                                         )
-                                    }  else if (receiverMobile.isBlank()) {
+                                    } else if (receiverMobile.isBlank()) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_receiver_mobile_)
                                         )
-                                    }else if (password.isBlank()) {
+                                    } else if (password.isBlank()) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_pin_)
                                         )
@@ -367,6 +366,7 @@ fun AccountToCashGenerate(function: () -> Unit) {
                                                 path = "${model.deviceData?.agent}",
                                                 data = AccountToCashHelper.generate(
                                                     name = receiverName,
+                                                    clientAccount = account,
                                                     account = "${agentAccount.value?.account}",
                                                     amount = amount,
                                                     mobile = "${user?.mobile}",
@@ -393,11 +393,13 @@ fun AccountToCashGenerate(function: () -> Unit) {
                                                             screenState = ModuleState.DISPLAY
                                                             moduleCall = Response.Confirm
                                                             validation?.amount = amount
-                                                            validation?.amountNum = account
+                                                            validation?.account = receiverMobile
                                                             validation?.extra = hashMapOf(
-                                                                "fromName" to user?.firstName,
-                                                                "fromAccount" to "${user?.account?.firstOrNull()?.account}"
+                                                                "fromName" to "",
+                                                                "fromAccount" to account
                                                             )
+                                                            validation?.clientName = receiverName
+                                                            validation?.currency=currency
                                                             validationData.value = validation
                                                             showDialog = true
                                                         }, onToken = {
@@ -470,13 +472,13 @@ fun AccountToCashGenerate(function: () -> Unit) {
                     action = {
                         model.web(
                             path = "${model.deviceData?.agent}",
-                            data = otpTransactionCompleteFunc(
-                                toAccount = account,
-                                fromAccount = "${user?.account?.firstOrNull()?.account}",
+                            data = AccountToCashHelper.post(
+                                account = "${agentAccount.value?.account}",
+                                branch = "${validationData.value?.branch}",
                                 amount = amount,
                                 mobile = "${user?.mobile}",
-                                narration = "${validationData.value?.traceNo}",
-                                agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                trx = "${validationData.value?.tracNo}",
+                                agentId = "${agentAccount.value?.agentID}",
                                 pin = password,
                                 model = model,
                                 otp = otp,

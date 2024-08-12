@@ -9,13 +9,13 @@ import javax.inject.Singleton
 data class ValidationBean(
     @field:SerializedName("ClientName")
     @field:Expose
-    val clientName: String?,
+    var clientName: String?,
     @field:SerializedName("AccountName")
     @field:Expose
     val accountName: String?,
     @field:SerializedName("CurrencyID")
     @field:Expose
-    val currency: String?,
+    var currency: String?,
     @field:SerializedName("Photo")
     @field:Expose
     val avatar: String?,
@@ -24,13 +24,18 @@ data class ValidationBean(
     val traceNo: String?,
     @field:SerializedName("Mobile")
     @field:Expose
-    val mobile: String?
+    val mobile: String?,
+    @field:SerializedName("TrxTraceNo")
+    @field:Expose
+    val tracNo: String?,
+    @field:SerializedName("OurBranchID")
+    @field:Expose
+    val branch: String?,
 ) {
     var amount: String? = null
-    var amountNum: String? = null
+    var account: String? = null
     var extra = hashMapOf<String, Any?>()
 }
-
 
 
 data class ValidationResponse(

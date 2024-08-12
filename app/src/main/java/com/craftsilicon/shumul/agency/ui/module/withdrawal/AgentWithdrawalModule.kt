@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -100,7 +99,7 @@ fun AgentWithdrawalModule(function: () -> Unit) {
     }
 
     val agentAccounts = remember { SnapshotStateList<DropDownResult>() }
-    val agentAccount: MutableState<Account?> = remember{
+    val agentAccount: MutableState<Account?> = remember {
         mutableStateOf(null)
     }
 
@@ -358,14 +357,18 @@ fun AgentWithdrawalModule(function: () -> Unit) {
                                                                 screenState = ModuleState.DISPLAY
                                                                 moduleCall = Response.Confirm
                                                                 validation?.amount = amount
-                                                                validation?.amountNum = account
+                                                                validation?.account =
+                                                                    "${agentAccount.value?.account}"
                                                                 validation?.extra = hashMapOf(
-                                                                    "fromName" to user?.firstName,
-                                                                    "fromAccount" to "${user?.account?.firstOrNull()?.account}"
+                                                                    "fromName" to validation?.clientName,
+                                                                    "fromAccount" to account
                                                                 )
+                                                                validation?.clientName =
+                                                                    user?.firstName
                                                                 validationData.value = validation
                                                                 showDialog = true
-                                                            }, onToken = {
+                                                            },
+                                                            onToken = {
                                                                 work.routeData(owner, object :
                                                                     WorkStatus {
                                                                     override fun workDone(b: Boolean) {
@@ -381,7 +384,9 @@ fun AgentWithdrawalModule(function: () -> Unit) {
                                                                 })
                                                             }
                                                         )
+
                                                     }
+
                                                 )
                                             }
                                             action.invoke()

@@ -174,7 +174,7 @@ fun FundTransferConfirmDialog(
                             .weight(1f)
                     )
                     Text(
-                        text = "${data.amountNum}",
+                        text = "${data.account}",
                         fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier

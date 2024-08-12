@@ -17,6 +17,7 @@ object AccountToCashHelper {
 
     fun generate(
         name: String,
+        clientAccount: String,
         account: String,
         amount: String,
         context: Context,
@@ -34,21 +35,24 @@ object AccountToCashHelper {
             val map = APP.data(
                 context = context,
                 storage = model.preferences,
-                action = ActionTypeEnum.CASH_TO_CASH_REDEEM.action,
+                action = ActionTypeEnum.ACCOUNT_TO_CASH.action,
                 uniqueId = uniqueID
             )
 
-            map["ACCOUNTID"] = account
+
+            map["ACCOUNTID"] = clientAccount //Debit
+            map["BANKACCOUNTID"] = account //Credit
+
             map["MOBILENUMBER"] = mobile
             map["AGENTID"] = agentId
             map["TRXAMOUNT"] = amount
             map["TRXMPIN"] = Util.newEncrypt(pin)
 
-            map["INFOFIELD102"] = mobile
-            map["INFOFIELD3"] = "C2CRECEIVE"
+            map["INFOFIELD107"] = mobile
             map["INFOFIELD102"] = account
             map["INFOFIELD4"] = amount
-            map["INFOFIELD8"] = narration
+            map["INFOFIELD8"] = name
+            map["INFOFIELD1"] = narration
 
 
             map["CALLTYPE"] = "B-"
@@ -67,8 +71,8 @@ object AccountToCashHelper {
         }
     }
 
+
     fun redeem(
-        traceNo: String,
         branch: String,
         account: String,
         amount: String,
@@ -87,27 +91,80 @@ object AccountToCashHelper {
             val map = APP.data(
                 context = context,
                 storage = model.preferences,
-                action = ActionTypeEnum.CASH_TO_CASH_REDEEM.action,
+                action = ActionTypeEnum.ACCOUNT_TO_CASH_REDEEM.action,
                 uniqueId = uniqueID
             )
 
+
+            //map["ACCOUNTID"] = account //Debit
+            map["BANKACCOUNTID"] = account //Credit
+            map["ACCOUNTID"] = account
+            map["MOBILENUMBER"] = mobile
+            map["AGENTID"] = agentId
+            map["TRXAMOUNT"] = amount
+            map["TRXMPIN"] = Util.newEncrypt(pin)
+            map["INFOFIELD3"] = "A2CRECEIVE"
+            map["INFOFIELD1"] = otp
+
+
+
+
+            map["CALLTYPE"] = "B-"
+            AppLogger.instance.appLog("A2C:REQUEST", Gson().toJson(map))
+            PayloadRequest(
+                uniqueId = "$unique",
+                data = model.restApiSecurity.encrypt(
+                    value = JSONObject(map).toString(),
+                    kv = device!!,
+                    iv = iv!!
+                )
+            )
+        } catch (ex: JSONException) {
+            ex.printStackTrace()
+            null
+        }
+    }
+
+
+    fun post(
+        branch: String,
+        trx: String,
+        account: String,
+        amount: String,
+        context: Context,
+        mobile: String,
+        otp: String,
+        agentId: String,
+        pin: String,
+        model: RemoteViewModelImpl
+    ): PayloadRequest? {
+        return try {
+            val iv = model.deviceData!!.run
+            val device = model.deviceData!!.device
+            val uniqueID = getUniqueID()
+            val unique = model.preferences.uniqueID.value
+            val map = APP.data(
+                context = context,
+                storage = model.preferences,
+                action = ActionTypeEnum.ACCOUNT_TO_CASH_POST.action,
+                uniqueId = uniqueID
+            )
+
+            map["BANKACCOUNTID"] = account
             map["ACCOUNTID"] = account
             map["MOBILENUMBER"] = mobile
             map["AGENTID"] = agentId
             map["TRXAMOUNT"] = amount
             map["TRXMPIN"] = Util.newEncrypt(pin)
 
-            map["INFOFIELD102"] = mobile
-            map["INFOFIELD3"] = "A2CPOST"
-            map["INFOFIELD102"] = account
-            map["INFOFIELD4"] = amount
-            map["INFOFIELD108"] = otp
-            map["INFOFIELD109"] = traceNo
-            map["INFOFIELD110"] = branch
+            map["INFOFIELD1"] = otp
+            map["INFOFIELD2"] = trx
+            map["INFOFIELD3"] = branch
+
 
 
             map["CALLTYPE"] = "B-"
-            AppLogger.instance.appLog("C2C:REQUEST", Gson().toJson(map))
+            AppLogger.instance.appLog("A2C:POST:REQUEST", Gson().toJson(map))
             PayloadRequest(
                 uniqueId = "$unique",
                 data = model.restApiSecurity.encrypt(
@@ -122,3 +179,5 @@ object AccountToCashHelper {
         }
     }
 }
+
+

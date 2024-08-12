@@ -320,6 +320,7 @@ fun accountOpeningFunc(
         map["INFOFIELD7"] = accountOpening.personal?.firstName
         map["INFOFIELD8"] = accountOpening.personal?.secondName
         map["INFOFIELD9"] = accountOpening.personal?.thirdName
+        map["INFOFIELD43"] = accountOpening.personal?.lastName
         map["INFOFIELD10"] = accountOpening.personal?.gender
         map["INFOFIELD11"] = accountOpening.personal?.dob
         map["INFOFIELD12"] = accountOpening.personal?.email

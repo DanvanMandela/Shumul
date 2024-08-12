@@ -22,6 +22,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -103,7 +104,6 @@ fun AccountToCashRedeem(function: () -> Unit) {
     }
 
 
-
     var trace by rememberSaveable {
         mutableStateOf("")
     }
@@ -132,6 +132,21 @@ fun AccountToCashRedeem(function: () -> Unit) {
 
 
     var action: () -> Unit = {}
+
+    LaunchedEffect(key1 = Unit) {
+        user?.account?.forEach {
+            agentAccounts.add(
+                DropDownResult(
+                    key = it,
+                    desc = it.account,
+                    display = it == accountState
+                )
+            )
+        }
+    }
+
+
+
 
     Box {
         when (screenState) {
@@ -166,29 +181,6 @@ fun AccountToCashRedeem(function: () -> Unit) {
                                 }
                             }
                         }
-                        Spacer(modifier = Modifier.size(16.dp))
-                        OutlinedTextField(
-                            value = trace,
-                            onValueChange = { trace = it },
-                            label = {
-                                Text(
-                                    text = stringResource(id = R.string.trace_no_),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
-                                )
-                            }, modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = horizontalModulePadding),
-                            textStyle = TextStyle(
-                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                fontSize = MaterialTheme.typography.labelLarge.fontSize
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Text
-                            )
-                        )
                         Spacer(modifier = Modifier.size(16.dp))
                         OutlinedTextField(
                             value = amount,
@@ -304,10 +296,6 @@ fun AccountToCashRedeem(function: () -> Unit) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_agent_account_number)
                                         )
-                                    }  else if (trace.isBlank()) {
-                                        snackState.showSnackbar(
-                                            context.getString(R.string.enter_trace_number_)
-                                        )
                                     } else if (amount.isBlank()) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_amount_)
@@ -327,8 +315,7 @@ fun AccountToCashRedeem(function: () -> Unit) {
                                                 path = "${model.deviceData?.agent}",
                                                 data = AccountToCashHelper.redeem(
                                                     account = "${agentAccount.value?.account}",
-                                                    branch  = "${agentAccount.value?.branchId}",
-                                                    traceNo = trace,
+                                                    branch = "${agentAccount.value?.branchId}",
                                                     amount = amount,
                                                     mobile = "${user?.mobile}",
                                                     agentId = "${user?.account?.firstOrNull()?.agentID}",
@@ -418,7 +405,7 @@ fun AccountToCashRedeem(function: () -> Unit) {
         if (showDialog) when (val s = moduleCall) {
             is Response.Success -> SuccessDialog(
                 message = "${s.data["message"]}",
-                reference = "${s.data["reference"]}",
+                reference = "${s.data["reference"] ?: ""}",
                 action = {
                     showDialog = false
                     function()
@@ -431,12 +418,12 @@ fun AccountToCashRedeem(function: () -> Unit) {
                     action = {
                         model.web(
                             path = "${model.deviceData?.agent}",
-                            data = otpTransactionCompleteFunc(
-                                toAccount = "account",
-                                fromAccount = "${user?.account?.firstOrNull()?.account}",
+                            data = AccountToCashHelper.post(
+                                account = "${agentAccount.value?.account}",
+                                branch = "${agentAccount.value?.branchId}",
                                 amount = amount,
                                 mobile = "${user?.mobile}",
-                                narration = "${validationData.value?.traceNo}",
+                                trx = "${validationData.value?.traceNo}",
                                 agentId = "${user?.account?.firstOrNull()?.agentID}",
                                 pin = password,
                                 model = model,

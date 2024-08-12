@@ -14,9 +14,9 @@ import java.util.UUID
 
 
 object ActivationData {
-    val AGENT_ID = if (TEST_VENDOR) "10051" else "10065"
-    val AGENT_PIN = if (TEST_VENDOR) "2798" else "5399"
-    val MOBILE = if (TEST_VENDOR) "726924300" else "776622171"
+    val AGENT_ID = if (TEST_VENDOR) "10053" else "10065"
+    val AGENT_PIN = if (TEST_VENDOR) "9656" else "5399"
+    val MOBILE = if (TEST_VENDOR) "708835301" else "776622171"
 }
 
 
@@ -52,10 +52,10 @@ fun imeiDeviceId(context: Context): String? {
 }
 
 object APP {
-    const val TEST = true
-    const val TEST_VENDOR = true
+    const val TEST = false
+    const val TEST_VENDOR = false
     const val TEST_CUSTOMER = false
-    const val ACTIVATED = true
+    const val ACTIVATED = false
     const val BANK_ID = "9981"
     const val CODE_BASE = "ANDROID"
     const val APP_NAME = "SHUMULAGENCY"

@@ -68,9 +68,7 @@ import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
-import com.craftsilicon.shumul.agency.ui.module.validation.ValidationModuleResponse
 import com.craftsilicon.shumul.agency.ui.module.withdrawal.otpTransactionCompleteFunc
-import com.craftsilicon.shumul.agency.ui.module.withdrawal.otpTransactionFunc
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
@@ -467,7 +465,7 @@ fun CashToCashGenerate(function: () -> Unit) {
                                                             screenState = ModuleState.DISPLAY
                                                             moduleCall = Response.Confirm
                                                             validation?.amount = amount
-                                                            validation?.amountNum = senderName
+                                                            validation?.account = senderName
                                                             validation?.extra = hashMapOf(
                                                                 "fromName" to user?.firstName,
                                                                 "fromAccount" to "${user?.account?.firstOrNull()?.account}"

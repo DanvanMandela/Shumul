@@ -5,9 +5,9 @@ import com.craftsilicon.shumul.agency.data.security.APP.TEST_CUSTOMER
 
 
 object Timeout {
-    const val CONNECTION = (30 * 10000).toLong()
-    const val READ = (60 * 10000).toLong()
-    const val WRITE = (60 * 10000).toLong()
+    const val CONNECTION = (30 * 1000).toLong()
+    const val READ = (60 * 1000).toLong()
+    const val WRITE = (60 * 1000).toLong()
 }
 
 object Url {

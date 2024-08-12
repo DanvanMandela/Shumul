@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.craftsilicon.shumul.agency.R
 import com.craftsilicon.shumul.agency.data.bean.ValidationBean
-import com.craftsilicon.shumul.agency.data.permission.CameraUtil
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.convert
 import com.craftsilicon.shumul.agency.ui.util.formatMoney
 
@@ -108,7 +107,7 @@ fun DepositConfirmDialog(data: ValidationBean, action: () -> Unit, close: () -> 
                             .weight(1f)
                     )
                     Text(
-                        text = "${data.amountNum}",
+                        text = "${data.account}",
                         fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier

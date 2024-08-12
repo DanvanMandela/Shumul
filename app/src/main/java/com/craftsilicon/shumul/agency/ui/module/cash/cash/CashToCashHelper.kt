@@ -43,19 +43,34 @@ object CashToCashHelper {
                 uniqueId = uniqueID
             )
 
-            map["ACCOUNTID"] = fromAccount
+//            IF @MerchantID = 'CASHTOCASH'
+//            BEGIN
+//            SET @MessageType = '0200'
+//            INSERT INTO #Response SELECT 2, @MobileNumber
+//            INSERT INTO #Response SELECT 3, 'C2C'
+//            INSERT INTO #Response SELECT 4, @Amount
+//            INSERT INTO #Response SELECT 7, @MonthPart + @DayPart + @HourPart + @MinPart + @SecPart
+//            INSERT INTO #Response SELECT 11, @StanNumber
+//            INSERT INTO #Response SELECT 49, 'YER'
+//            INSERT INTO #Response SELECT 102, @AccountID--agentAccountID
+//            INSERT INTO #Response SELECT 106, @InfoField1--trx description
+//            INSERT INTO #Response SELECT 107, @InfoField3--ToMobile(Receiver Mob)
+//            INSERT INTO #Response SELECT 108, @InfoField2--ToName
+//            INSERT INTO #Response SELECT 109, @Infofield4--FromName
+
+
+            map["ACCOUNTID"] = fromAccount //Debit
+            map["BANKACCOUNTID"] = fromAccount //Credit
+
             map["MOBILENUMBER"] = mobile
             map["AGENTID"] = agentId
             map["TRXAMOUNT"] = amount
             map["TRXMPIN"] = Util.newEncrypt(pin)
 
-            map["INFOFIELD102"] = mobile
-            map["INFOFIELD3"] = "C2C"
-            map["INFOFIELD104"] = amount
-            map["INFOFIELD106"] = narration
-            map["INFOFIELD107"] = fromName
-            map["INFOFIELD108"] = toName
-            map["INFOFIELD109"] = toMobile
+            map["INFOFIELD1"] = narration
+            map["INFOFIELD4"] = fromName
+            map["INFOFIELD2"] = toName
+            map["INFOFIELD3"] = toMobile
 
 
             map["CALLTYPE"] = "B-"
@@ -98,7 +113,26 @@ object CashToCashHelper {
                 uniqueId = uniqueID
             )
 
-            map["ACCOUNTID"] = account
+
+
+//            IF @MerchantID = 'C2CRECEIVE'
+//            BEGIN
+//
+//            SET @MessageType = '0200'
+//            INSERT INTO #Response SELECT 3, 'C2CRECEIVE'
+//            INSERT INTO #Response SELECT 4, @Amount
+//            INSERT INTO #Response SELECT 7, @MonthPart + @DayPart + @HourPart + @MinPart + @SecPart
+//            INSERT INTO #Response SELECT 11, @StanNumber
+//            INSERT INTO #Response SELECT 49, 'YER'
+//            INSERT INTO #Response SELECT 102, @AccountID-- Agent account
+//            INSERT INTO #Response SELECT 108, @InfoField1--OTP
+
+
+
+
+            map["ACCOUNTID"] = account //Debit
+            map["BANKACCOUNTID"] = account //Credit
+
             map["MOBILENUMBER"] = mobile
             map["AGENTID"] = agentId
             map["TRXAMOUNT"] = amount
@@ -108,7 +142,7 @@ object CashToCashHelper {
             map["INFOFIELD3"] = "C2CRECEIVE"
             map["INFOFIELD102"] = account
             map["INFOFIELD4"] = amount
-            map["INFOFIELD8"] = otp
+            map["INFOFIELD1"] = otp
 
 
             map["CALLTYPE"] = "B-"

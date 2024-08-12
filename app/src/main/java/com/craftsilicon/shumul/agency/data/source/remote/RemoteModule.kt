@@ -36,9 +36,9 @@ class RemoteModule {
             .baseUrl(ROUTE_BASE_URL)
             .client(
                 OkHttpClient.Builder()
-                    .connectTimeout(Timeout.CONNECTION, TimeUnit.SECONDS)
-                    .writeTimeout(Timeout.WRITE, TimeUnit.SECONDS)
-                    .readTimeout(Timeout.READ, TimeUnit.SECONDS)
+                    .connectTimeout(Timeout.CONNECTION, TimeUnit.MILLISECONDS)
+                    .writeTimeout(Timeout.WRITE, TimeUnit.MILLISECONDS)
+                    .readTimeout(Timeout.READ, TimeUnit.MILLISECONDS)
                     .addInterceptor { chain ->
                         val url = chain
                             .request()

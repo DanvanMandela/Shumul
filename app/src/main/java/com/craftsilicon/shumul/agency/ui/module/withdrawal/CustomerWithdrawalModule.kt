@@ -350,6 +350,7 @@ fun CustomerWithdrawalModule(function: () -> Unit) {
                                                 )!!,
                                                 state = { screenState = it },
                                                 onResponse = { response ->
+
                                                     FundTransferModuleModuleResponse(
                                                         response = response,
                                                         model = model,
