@@ -189,5 +189,6 @@
     <string name="select_special_officer_">اختر ضابط خاص</string>
     <string name="trace_no_">رقم التتبع</string>
     <string name="enter_trace_number_">أدخل رقم تتبع المعاملة</string>
+    <string name="camera_permission_message_">للمتابعة، يرجى منح إذن الوصول إلى الكاميرا. هذا الإذن ضروري لعمل التطبيق بشكل صحيح.</string>
 
 </resources>

@@ -210,4 +210,8 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
 
+
+    implementation(libs.accompanist.permissions)
+
+
 }

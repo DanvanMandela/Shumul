@@ -187,5 +187,6 @@
     <string name="select_special_officer_">Select special officer</string>
     <string name="trace_no_">Trace Number</string>
     <string name="enter_trace_number_">Enter transaction trace number</string>
+    <string name="camera_permission_message_">To continue, please grant camera permission. This permission is essential for the app to function properly.</string>
 
 </resources>
