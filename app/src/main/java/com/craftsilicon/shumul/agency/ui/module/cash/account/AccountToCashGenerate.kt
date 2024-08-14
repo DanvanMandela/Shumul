@@ -98,14 +98,14 @@ fun AccountToCashGenerate(function: () -> Unit) {
         mutableStateOf(null)
     }
 
-    val accountState = model.preferences.currentAccount.collectAsState().value
-    val agentAccounts = remember { SnapshotStateList<DropDownResult>() }
-    val agentAccount: MutableState<Account?> = remember {
-        mutableStateOf(null)
-    }
+//    val accountState = model.preferences.currentAccount.collectAsState().value
+//    val agentAccounts = remember { SnapshotStateList<DropDownResult>() }
+//    val agentAccount: MutableState<Account?> = remember {
+//        mutableStateOf(null)
+//    }
 
-    var currency by rememberSaveable {
-        mutableStateOf(context.getString(R.string.currency_symbol_))
+    val currency by rememberSaveable {
+        mutableStateOf(user?.account?.first()?.currency)
     }
 
 
@@ -137,17 +137,17 @@ fun AccountToCashGenerate(function: () -> Unit) {
 
     var action: () -> Unit = {}
 
-    LaunchedEffect(key1 = Unit) {
-        user?.account?.forEach {
-            agentAccounts.add(
-                DropDownResult(
-                    key = it,
-                    desc = it.account,
-                    display = it == accountState
-                )
-            )
-        }
-    }
+//    LaunchedEffect(key1 = Unit) {
+//        user?.account?.forEach {
+//            agentAccounts.add(
+//                DropDownResult(
+//                    key = it,
+//                    desc = it.account,
+//                    display = it == accountState
+//                )
+//            )
+//        }
+//    }
 
     Box {
         when (screenState) {
@@ -167,22 +167,22 @@ fun AccountToCashGenerate(function: () -> Unit) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
 
-                        Spacer(modifier = Modifier.size(16.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = horizontalModulePadding)
-                        ) {
-                            EditDropDown(
-                                label = stringResource(id = R.string.agent_account_),
-                                data = MutableStateFlow(agentAccounts)
-                            ) { result ->
-                                agentAccount.value = result.key as Account
-                                agentAccount.value?.currency?.let {
-                                    currency = it
-                                }
-                            }
-                        }
+//                        Spacer(modifier = Modifier.size(16.dp))
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(horizontal = horizontalModulePadding)
+//                        ) {
+//                            EditDropDown(
+//                                label = stringResource(id = R.string.agent_account_),
+//                                data = MutableStateFlow(agentAccounts)
+//                            ) { result ->
+//                                agentAccount.value = result.key as Account
+//                                agentAccount.value?.currency?.let {
+//                                    currency = it
+//                                }
+//                            }
+//                        }
                         Spacer(modifier = Modifier.size(16.dp))
 
                         OutlinedTextField(
@@ -367,11 +367,11 @@ fun AccountToCashGenerate(function: () -> Unit) {
                                                 data = AccountToCashHelper.generate(
                                                     name = receiverName,
                                                     clientAccount = account,
-                                                    account = "${agentAccount.value?.account}",
+                                                    account = "${user?.account?.first()?.agentID}",
                                                     amount = amount,
                                                     mobile = "${user?.mobile}",
                                                     narration = receiverName,
-                                                    agentId = "${agentAccount.value?.agentID}",
+                                                    agentId = "${user?.account?.first()?.agentID}",
                                                     pin = password,
                                                     model = model,
                                                     context = context
@@ -399,7 +399,7 @@ fun AccountToCashGenerate(function: () -> Unit) {
                                                                 "fromAccount" to account
                                                             )
                                                             validation?.clientName = receiverName
-                                                            validation?.currency=currency
+                                                            validation?.currency = currency
                                                             validationData.value = validation
                                                             showDialog = true
                                                         }, onToken = {
@@ -473,12 +473,12 @@ fun AccountToCashGenerate(function: () -> Unit) {
                         model.web(
                             path = "${model.deviceData?.agent}",
                             data = AccountToCashHelper.post(
-                                account = "${agentAccount.value?.account}",
+                                account = account,
                                 branch = "${validationData.value?.branch}",
                                 amount = amount,
                                 mobile = "${user?.mobile}",
                                 trx = "${validationData.value?.tracNo}",
-                                agentId = "${agentAccount.value?.agentID}",
+                                agentId = "${user?.account?.first()?.agentID}",
                                 pin = password,
                                 model = model,
                                 otp = otp,

@@ -41,15 +41,15 @@ object AccountToCashHelper {
 
 
             map["ACCOUNTID"] = clientAccount //Debit
-            map["BANKACCOUNTID"] = account //Credit
+            map["BANKACCOUNTID"] = clientAccount //Credit
 
             map["MOBILENUMBER"] = mobile
             map["AGENTID"] = agentId
             map["TRXAMOUNT"] = amount
             map["TRXMPIN"] = Util.newEncrypt(pin)
 
-            map["INFOFIELD107"] = mobile
-            map["INFOFIELD102"] = account
+           // map["INFOFIELD107"] = mobile
+          //  map["INFOFIELD102"] = account
             map["INFOFIELD4"] = amount
             map["INFOFIELD8"] = name
             map["INFOFIELD1"] = narration

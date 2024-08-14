@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.asLiveData
@@ -184,10 +185,14 @@ class MainActivity : ComponentActivity(), AppCallback {
 
                     }
                 }
-                onUserInteraction()
-                onInActivity(controller = navController)
-                remote.permission.generalAccess()
+                LaunchedEffect(key1 = Unit) {
+                    onUserInteraction()
+                    onInActivity(controller = navController)
+                    remote.permission.generalAccess()
+                }
             }
+
+
         }
     }
 

@@ -52,7 +52,8 @@ data class Account(
     @field:SerializedName("AccountType")
     val accountType: String?,
     @field:SerializedName("CurrencyID")
-    val currency: String? = "USD",
+    @field:Expose
+    val currency: String?,
     @field:Expose
     @field:SerializedName("DeviceID")
     val deviceID: String?,

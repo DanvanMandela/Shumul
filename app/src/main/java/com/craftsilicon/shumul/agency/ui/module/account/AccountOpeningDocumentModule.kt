@@ -1,6 +1,5 @@
 package com.craftsilicon.shumul.agency.ui.module.account
 
-import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -76,10 +75,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.canhub.cropper.CropImageContract
 import com.craftsilicon.shumul.agency.R
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.capturedImage
-import com.craftsilicon.shumul.agency.data.permission.CameraUtil.compressBitmap
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.compressImage
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.convert
-import com.craftsilicon.shumul.agency.data.permission.ImageCallback
 import com.craftsilicon.shumul.agency.data.permission.ImagePermissions.image
 import com.craftsilicon.shumul.agency.data.permission.imageOption
 import com.craftsilicon.shumul.agency.data.security.APP.BANK_ID
@@ -102,10 +99,8 @@ import com.craftsilicon.shumul.agency.ui.util.LoadingModule
 import com.craftsilicon.shumul.agency.ui.util.buttonHeight
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
+import com.craftsilicon.shumul.agency.ui.util.toast
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
@@ -125,14 +120,12 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
     val accountOpen = model.preferences.accountOpen.collectAsState().value
 
 
-    val launcherMultiplePermissions = rememberLauncherForActivityResult(
+    val permissions = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissionsMap ->
         val areGranted = permissionsMap.values.reduce { acc, next -> acc && next }
-        if (areGranted) {
-            // Use location
-        } else {
-
+        if (!areGranted) {
+            context.toast("permission required")
         }
     }
 
@@ -216,6 +209,17 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
         }
 
     }
+
+
+    val permission: (access: (value: Boolean) -> Unit) -> Unit = { access ->
+        checkAndRequestLocationPermissions(
+            context = context,
+            permissions = image().toTypedArray(),
+            launcher = permissions,
+            access = access
+        )
+    }
+
 
 
     Box {
@@ -429,6 +433,12 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                             Card(
                                 onClick = {
 
+//                                    permission { access ->
+//                                        if (access) {
+//                                            sayCheese.value = SayCheese.Selfie
+//                                            launcher.imageOption()
+//                                        }
+//                                    }
 
                                     model.permission.imageAccess { permission ->
                                         if (permission) {
