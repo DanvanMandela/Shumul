@@ -45,6 +45,26 @@ val withdrawal = mutableListOf(
 )
 
 
+val remittance = mutableListOf(
+    MenuItem(
+        title = R.string.agent_,
+        icon = R.drawable.bank_icon,
+        navigate = NavigateTo(
+            route = Module.Remittance.Agent.route,
+            type = NavigateModule(),
+        )
+    ),
+    MenuItem(
+        title = R.string.customer_,
+        icon = R.drawable.bank_note,
+        navigate = NavigateTo(
+            route = Module.Remittance.Customer.route,
+            type = NavigateModule(),
+        )
+    )
+)
+
+
 val accountCash = mutableListOf(
     MenuItem(
         title = R.string.generate_token_,

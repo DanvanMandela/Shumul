@@ -11,6 +11,10 @@ enum class ModuleState {
     LOADING, ERROR, DISPLAY, SUCCESS
 }
 
+enum class ModuleAction {
+    Validate, Proceed
+}
+
 sealed class Module(open val route: String, open val name: String = String()) {
     data object Splash : Module(route = "splash")
     data object Dashboard : Module(route = "dashboard?key={key}", name = "dashboard")
@@ -46,6 +50,11 @@ sealed class Module(open val route: String, open val name: String = String()) {
         data object MoreDetail : Module(route = "moreDetail")
         data object Documents : Module(route = "document")
 
+    }
+
+    open class Remittance : Module(route = "remittance") {
+        data object Agent : Module(route = "agentRemittance")
+        data object Customer : Module(route = "customerRemittance")
     }
 
     open class AccountStatement(override val route: String = "statement") : Module(route) {

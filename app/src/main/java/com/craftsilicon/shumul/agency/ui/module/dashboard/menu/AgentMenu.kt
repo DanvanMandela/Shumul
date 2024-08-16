@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -63,6 +64,7 @@ fun AgentMenu(data: MenuItem, action: (route: NavigateTo) -> Unit) {
                 style = MaterialTheme.typography.labelSmall,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
+                minLines = 2,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 1.dp)
@@ -81,9 +83,22 @@ fun AgentMenus(
     BoxWithConstraints(modifier = Modifier.width(screenWidthDp)) {
         val width = this.maxWidth
         val itemSize: Dp = width / 4
-        FlowRow(
-            mainAxisSize = SizeMode.Expand,
-            mainAxisAlignment = FlowMainAxisAlignment.Start,
+//        FlowRow(
+//            mainAxisSize = SizeMode.Expand,
+//            mainAxisAlignment = FlowMainAxisAlignment.Start,
+//            modifier = Modifier
+//                .width(width)
+//                .background(color = MaterialTheme.colorScheme.background)
+//        ) {
+//            agentMenus.forEach {
+//                Box(
+//                    modifier = Modifier.size(itemSize)
+//                ) {
+//                    AgentMenu(data = it, action = action)
+//                }
+//            }
+//        }
+        Row(
             modifier = Modifier
                 .width(width)
                 .background(color = MaterialTheme.colorScheme.background)

@@ -22,7 +22,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -31,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,7 +49,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.craftsilicon.shumul.agency.R
-import com.craftsilicon.shumul.agency.data.bean.Account
 import com.craftsilicon.shumul.agency.data.bean.ValidationBean
 import com.craftsilicon.shumul.agency.data.security.APP
 import com.craftsilicon.shumul.agency.data.security.ActivationData
@@ -59,15 +56,12 @@ import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
 import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
-import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
-import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
 import com.craftsilicon.shumul.agency.ui.module.validation.ValidationModuleResponse
-import com.craftsilicon.shumul.agency.ui.module.withdrawal.otpTransactionCompleteFunc
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
@@ -75,7 +69,6 @@ import com.craftsilicon.shumul.agency.ui.util.MoneyVisualTransformation
 import com.craftsilicon.shumul.agency.ui.util.countryCode
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @Composable
@@ -98,11 +91,6 @@ fun AccountToCashGenerate(function: () -> Unit) {
         mutableStateOf(null)
     }
 
-//    val accountState = model.preferences.currentAccount.collectAsState().value
-//    val agentAccounts = remember { SnapshotStateList<DropDownResult>() }
-//    val agentAccount: MutableState<Account?> = remember {
-//        mutableStateOf(null)
-//    }
 
     val currency by rememberSaveable {
         mutableStateOf(user?.account?.first()?.currency)
@@ -367,7 +355,8 @@ fun AccountToCashGenerate(function: () -> Unit) {
                                                 data = AccountToCashHelper.generate(
                                                     name = receiverName,
                                                     clientAccount = account,
-                                                    account = "${user?.account?.first()?.agentID}",
+                                                    to = receiverMobile,
+                                                    toName = receiverName,
                                                     amount = amount,
                                                     mobile = "${user?.mobile}",
                                                     narration = receiverName,
@@ -392,7 +381,7 @@ fun AccountToCashGenerate(function: () -> Unit) {
                                                         onSuccess = { validation ->
                                                             screenState = ModuleState.DISPLAY
                                                             moduleCall = Response.Confirm
-                                                            validation?.amount = amount
+                                                            validation?.holderAmount = amount
                                                             validation?.account = receiverMobile
                                                             validation?.extra = hashMapOf(
                                                                 "fromName" to "",
@@ -476,7 +465,7 @@ fun AccountToCashGenerate(function: () -> Unit) {
                                 account = account,
                                 branch = "${validationData.value?.branch}",
                                 amount = amount,
-                                mobile = "${user?.mobile}",
+                                mobile = receiverMobile,
                                 trx = "${validationData.value?.tracNo}",
                                 agentId = "${user?.account?.first()?.agentID}",
                                 pin = password,

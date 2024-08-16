@@ -108,7 +108,7 @@ fun AccountOpeningDialog(
                     )
                     Text(
                         text = "${user?.personal?.firstName} ${user?.personal?.secondName ?: ""} " +
-                                "${user?.personal?.thirdName}",
+                                "${user?.personal?.thirdName} ${user?.personal?.lastName}",
                         fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier

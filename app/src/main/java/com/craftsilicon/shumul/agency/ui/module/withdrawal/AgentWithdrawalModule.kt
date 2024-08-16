@@ -356,7 +356,7 @@ fun AgentWithdrawalModule(function: () -> Unit) {
                                                             onSuccess = { validation ->
                                                                 screenState = ModuleState.DISPLAY
                                                                 moduleCall = Response.Confirm
-                                                                validation?.amount = amount
+                                                                validation?.holderAmount = amount
                                                                 validation?.account =
                                                                     "${agentAccount.value?.account}"
                                                                 validation?.extra = hashMapOf(

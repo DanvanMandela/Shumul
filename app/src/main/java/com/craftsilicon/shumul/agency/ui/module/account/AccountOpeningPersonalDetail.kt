@@ -219,6 +219,10 @@ fun AccountOpeningPersonalDetail(data: GlobalData) {
                                                 snackState.showSnackbar(
                                                     context.getString(R.string.enter_middle_name_)
                                                 )
+                                            }  else if (lastName.isBlank()) {
+                                                snackState.showSnackbar(
+                                                    context.getString(R.string.enter_last_name_)
+                                                )
                                             } else if (gender.isBlank()) {
                                                 snackState.showSnackbar(
                                                     context.getString(R.string.select_gender_)

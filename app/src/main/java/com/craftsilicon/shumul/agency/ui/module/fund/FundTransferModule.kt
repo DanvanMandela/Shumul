@@ -410,7 +410,7 @@ fun FundTransferModule(data: GlobalData) {
                                                                                         ModuleState.DISPLAY
                                                                                     moduleCall =
                                                                                         Response.Confirm
-                                                                                    validation?.amount =
+                                                                                    validation?.holderAmount =
                                                                                         amount
                                                                                     validation?.account =
                                                                                         toAccount

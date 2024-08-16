@@ -40,6 +40,7 @@ import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModule
 import com.craftsilicon.shumul.agency.ui.module.login.ActivationModule
 import com.craftsilicon.shumul.agency.ui.module.login.LoginModule
 import com.craftsilicon.shumul.agency.ui.module.pin.ChangePin
+import com.craftsilicon.shumul.agency.ui.module.remittance.RemittanceModule
 import com.craftsilicon.shumul.agency.ui.module.withdrawal.WithdrawalModule
 import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
 import com.craftsilicon.shumul.agency.ui.navigation.Module
@@ -181,6 +182,10 @@ class MainActivity : ComponentActivity(), AppCallback {
                         }
                         setComposable(route = Module.DataPurchase.Subscribe.route) {
                             DataPurchaseSubscribeModule(data = global)
+                        }
+
+                        setComposable(route = Module.Remittance().route) {
+                            RemittanceModule(data = global)
                         }
 
                     }

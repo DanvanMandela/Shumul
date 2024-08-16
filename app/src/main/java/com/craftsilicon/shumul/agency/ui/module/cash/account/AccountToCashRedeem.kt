@@ -66,12 +66,10 @@ import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
-import com.craftsilicon.shumul.agency.ui.module.withdrawal.otpTransactionCompleteFunc
+import com.craftsilicon.shumul.agency.ui.module.validation.ValidationModuleResponse
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
-import com.craftsilicon.shumul.agency.ui.util.MoneyVisualTransformation
-import com.craftsilicon.shumul.agency.ui.util.countryCode
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -104,15 +102,6 @@ fun AccountToCashRedeem(function: () -> Unit) {
     }
 
 
-    var trace by rememberSaveable {
-        mutableStateOf("")
-    }
-
-
-    var amount by rememberSaveable {
-        mutableStateOf("")
-    }
-
     var otp by rememberSaveable {
         mutableStateOf("")
     }
@@ -144,7 +133,6 @@ fun AccountToCashRedeem(function: () -> Unit) {
             )
         }
     }
-
 
 
 
@@ -181,36 +169,7 @@ fun AccountToCashRedeem(function: () -> Unit) {
                                 }
                             }
                         }
-                        Spacer(modifier = Modifier.size(16.dp))
-                        OutlinedTextField(
-                            value = amount,
-                            onValueChange = { amount = it },
-                            label = {
-                                Text(
-                                    text = stringResource(id = R.string.amount_),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
-                                )
-                            }, modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = horizontalModulePadding),
-                            textStyle = TextStyle(
-                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                fontSize = MaterialTheme.typography.labelLarge.fontSize
-                            ),
-                            suffix = {
-                                Text(
-                                    text = stringResource(id = R.string.currency_symbol_),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold))
-                                )
-                            },
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Phone
-                            ), visualTransformation = MoneyVisualTransformation()
-                        )
+
                         Spacer(modifier = Modifier.size(16.dp))
 
                         OutlinedTextField(
@@ -296,10 +255,6 @@ fun AccountToCashRedeem(function: () -> Unit) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_agent_account_number)
                                         )
-                                    } else if (amount.isBlank()) {
-                                        snackState.showSnackbar(
-                                            context.getString(R.string.enter_amount_)
-                                        )
                                     } else if (otp.isBlank()) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_otp_)
@@ -310,15 +265,12 @@ fun AccountToCashRedeem(function: () -> Unit) {
                                         )
                                     } else {
                                         action = {
-
                                             model.web(
                                                 path = "${model.deviceData?.agent}",
-                                                data = AccountToCashHelper.redeem(
+                                                data = AccountToCashHelper.details(
                                                     account = "${agentAccount.value?.account}",
-                                                    branch = "${agentAccount.value?.branchId}",
-                                                    amount = amount,
                                                     mobile = "${user?.mobile}",
-                                                    agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                                    agentId = "${agentAccount.value?.agentID}",
                                                     pin = password,
                                                     model = model,
                                                     otp = otp,
@@ -326,7 +278,7 @@ fun AccountToCashRedeem(function: () -> Unit) {
                                                 )!!,
                                                 state = { screenState = it },
                                                 onResponse = { response ->
-                                                    FundTransferModuleModuleResponse(
+                                                    ValidationModuleResponse(
                                                         response = response,
                                                         model = model,
                                                         onError = { error ->
@@ -337,16 +289,23 @@ fun AccountToCashRedeem(function: () -> Unit) {
                                                                 )
                                                             }
                                                         },
-                                                        onSuccess = { message ->
-                                                            moduleCall = Response.Success(
-                                                                data = hashMapOf(
-                                                                    "message" to message!!.message,
-                                                                    "reference" to model.any.map(
-                                                                        model.any.convert(message.data)
-                                                                    )["BatchID"]
-                                                                )
-                                                            )
+                                                        onSuccess = { validation ->
                                                             screenState = ModuleState.DISPLAY
+                                                            moduleCall = Response.Confirm
+                                                            validation?.holderAmount =
+                                                                validation?.amount
+                                                            validation?.account =
+                                                                validation?.toMobile
+                                                            validation?.extra = hashMapOf(
+                                                                "fromName" to validation?.fromName,
+                                                                "fromAccount" to validation?.fromAccount,
+                                                                "fromMobile" to validation?.fromMobile
+                                                            )
+                                                            validation?.clientName =
+                                                                validation?.toName
+                                                            validation?.currency = currency
+                                                            validation?.otpHolder = otp
+                                                            validationData.value = validation
                                                             showDialog = true
                                                         }, onToken = {
                                                             work.routeData(owner, object :
@@ -418,12 +377,11 @@ fun AccountToCashRedeem(function: () -> Unit) {
                     action = {
                         model.web(
                             path = "${model.deviceData?.agent}",
-                            data = AccountToCashHelper.post(
+                            data = AccountToCashHelper.redeem(
                                 account = "${agentAccount.value?.account}",
                                 branch = "${agentAccount.value?.branchId}",
-                                amount = amount,
+                                amount = "${validationData.value?.amount}",
                                 mobile = "${user?.mobile}",
-                                trx = "${validationData.value?.traceNo}",
                                 agentId = "${user?.account?.firstOrNull()?.agentID}",
                                 pin = password,
                                 model = model,

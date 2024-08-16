@@ -320,7 +320,7 @@ fun accountOpeningFunc(
         map["INFOFIELD7"] = accountOpening.personal?.firstName
         map["INFOFIELD8"] = accountOpening.personal?.secondName
         map["INFOFIELD9"] = accountOpening.personal?.thirdName
-        map["INFOFIELD43"] = accountOpening.personal?.lastName
+        map["INFOFIELD44"] = accountOpening.personal?.lastName
         map["INFOFIELD10"] = accountOpening.personal?.gender
         map["INFOFIELD11"] = accountOpening.personal?.dob
         map["INFOFIELD12"] = accountOpening.personal?.email
@@ -349,6 +349,7 @@ fun accountOpeningFunc(
         map["INFOFIELD41"] = accountOpening.more?.address
         map["INFOFIELD42"] = accountOpening.more?.landline
         map["INFOFIELD43"] = officer.map { it.value }.joinToString("~") //Special officer
+
         map["MOBILENUMBER"] = mobile
         map["AGENTID"] = agentId
         map["CALLTYPE"] = "B-"

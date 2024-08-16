@@ -63,6 +63,7 @@ object CashToCashHelper {
             map["BANKACCOUNTID"] = fromAccount //Credit
 
             map["MOBILENUMBER"] = mobile
+            map["PHONENUMBER"] = mobile
             map["AGENTID"] = agentId
             map["TRXAMOUNT"] = amount
             map["TRXMPIN"] = Util.newEncrypt(pin)
@@ -71,6 +72,7 @@ object CashToCashHelper {
             map["INFOFIELD4"] = fromName
             map["INFOFIELD2"] = toName
             map["INFOFIELD3"] = toMobile
+            map["INFOFIELD5"] = mobile
 
 
             map["CALLTYPE"] = "B-"

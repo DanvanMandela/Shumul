@@ -1,12 +1,8 @@
 package com.craftsilicon.shumul.agency.ui.module.account
 
-import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
-import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,7 +39,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -70,14 +65,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.canhub.cropper.CropImageContract
 import com.craftsilicon.shumul.agency.R
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.capturedImage
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.compressImage
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.convert
-import com.craftsilicon.shumul.agency.data.permission.ImagePermissions.image
 import com.craftsilicon.shumul.agency.data.permission.imageOption
 import com.craftsilicon.shumul.agency.data.security.APP.BANK_ID
 import com.craftsilicon.shumul.agency.data.security.APP.country
@@ -99,11 +92,9 @@ import com.craftsilicon.shumul.agency.ui.util.LoadingModule
 import com.craftsilicon.shumul.agency.ui.util.buttonHeight
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
-import com.craftsilicon.shumul.agency.ui.util.toast
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountOpeningDocumentModule(data: GlobalData) {
 
@@ -118,16 +109,6 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
     val scope = rememberCoroutineScope()
     val user = model.preferences.userData.collectAsState().value
     val accountOpen = model.preferences.accountOpen.collectAsState().value
-
-
-    val permissions = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissionsMap ->
-        val areGranted = permissionsMap.values.reduce { acc, next -> acc && next }
-        if (!areGranted) {
-            context.toast("permission required")
-        }
-    }
 
 
     var moduleCall: ModuleCall by remember {
@@ -211,14 +192,6 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
     }
 
 
-    val permission: (access: (value: Boolean) -> Unit) -> Unit = { access ->
-        checkAndRequestLocationPermissions(
-            context = context,
-            permissions = image().toTypedArray(),
-            launcher = permissions,
-            access = access
-        )
-    }
 
 
 
@@ -853,36 +826,4 @@ data object NothingShow : DocumentDialog()
 enum class SayCheese {
     IdBack, Selfie, Signature, IdFront
 }
-
-fun checkAndRequestCameraPermission(
-    context: Context,
-    permission: String,
-    launcher: ManagedActivityResultLauncher<String, Boolean>,
-    access: (value: Boolean) -> Unit
-) {
-    val permissionCheckResult = ContextCompat.checkSelfPermission(context, permission)
-    if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
-        access(true)
-    } else {
-        launcher.launch(permission)
-    }
-}
-
-fun checkAndRequestLocationPermissions(
-    context: Context,
-    permissions: Array<String>,
-    launcher: ManagedActivityResultLauncher<Array<String>, Map<String, Boolean>>,
-    access: (value: Boolean) -> Unit
-) {
-    if (permissions.all {
-            ContextCompat.checkSelfPermission(
-                context,
-                it
-            ) == PackageManager.PERMISSION_GRANTED
-        }
-    ) {
-        access(true)
-    } else launcher.launch(permissions)
-}
-
 

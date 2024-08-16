@@ -64,15 +64,13 @@ import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
+import com.craftsilicon.shumul.agency.ui.module.cash.account.AccountToCashHelper
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
-import com.craftsilicon.shumul.agency.ui.module.withdrawal.customerOtpTransactionCompleteFunc
-import com.craftsilicon.shumul.agency.ui.module.withdrawal.otpTransactionCompleteFunc
+import com.craftsilicon.shumul.agency.ui.module.validation.ValidationModuleResponse
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
-import com.craftsilicon.shumul.agency.ui.util.MoneyVisualTransformation
-import com.craftsilicon.shumul.agency.ui.util.countryCode
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -101,18 +99,7 @@ fun CashToCashRedeem(function: () -> Unit) {
         mutableStateOf(null)
     }
 
-    var receiverMobile by rememberSaveable {
-        mutableStateOf("")
-    }
 
-    var receiverName by rememberSaveable {
-        mutableStateOf("")
-    }
-
-
-    var amount by rememberSaveable {
-        mutableStateOf("")
-    }
     var currency by rememberSaveable {
         mutableStateOf(context.getString(R.string.currency_symbol_))
     }
@@ -167,89 +154,21 @@ fun CashToCashRedeem(function: () -> Unit) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Spacer(modifier = Modifier.size(16.dp))
-                        OutlinedTextField(
-                            value = receiverName,
-                            onValueChange = { receiverName = it },
-                            label = {
-                                Text(
-                                    text = stringResource(id = R.string.full_name_),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
-                                )
-                            }, modifier = Modifier
+                        Box(
+                            modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = horizontalModulePadding),
-                            textStyle = TextStyle(
-                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                fontSize = MaterialTheme.typography.labelLarge.fontSize
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Text
-                            )
-                        )
-                        Spacer(modifier = Modifier.size(16.dp))
-                        OutlinedTextField(
-                            value = receiverMobile,
-                            onValueChange = { receiverMobile = it },
-                            label = {
-                                Text(
-                                    text = stringResource(id = R.string.mobile_number_),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
-                                )
-                            }, modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = horizontalModulePadding),
-                            textStyle = TextStyle(
-                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                fontSize = MaterialTheme.typography.labelLarge.fontSize
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Phone
-                            ), prefix = {
-                                Text(
-                                    text = countryCode(),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold))
-                                )
+                                .padding(horizontal = horizontalModulePadding)
+                        ) {
+                            EditDropDown(
+                                label = stringResource(id = R.string.agent_account_),
+                                data = MutableStateFlow(agentAccounts)
+                            ) { result ->
+                                agentAccount.value = result.key as Account
+                                agentAccount.value?.currency?.let {
+                                    currency = it
+                                }
                             }
-                        )
-
-                        Spacer(modifier = Modifier.size(16.dp))
-
-                        OutlinedTextField(
-                            value = amount,
-                            onValueChange = { amount = it },
-                            label = {
-                                Text(
-                                    text = stringResource(id = R.string.amount_),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
-                                )
-                            }, modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = horizontalModulePadding),
-                            textStyle = TextStyle(
-                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                fontSize = MaterialTheme.typography.labelLarge.fontSize
-                            ),
-                            suffix = {
-                                Text(
-                                    text = currency,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold))
-                                )
-                            },
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Phone
-                            ), visualTransformation = MoneyVisualTransformation()
-                        )
+                        }
                         Spacer(modifier = Modifier.size(16.dp))
 
                         OutlinedTextField(
@@ -330,19 +249,7 @@ fun CashToCashRedeem(function: () -> Unit) {
                         Button(
                             onClick = {
                                 scope.launch {
-                                    if (receiverName.isBlank()) {
-                                        snackState.showSnackbar(
-                                            context.getString(R.string.enter_full_name_)
-                                        )
-                                    } else if (receiverName.isBlank()) {
-                                        snackState.showSnackbar(
-                                            context.getString(R.string.enter_mobile_number_)
-                                        )
-                                    } else if (amount.isBlank()) {
-                                        snackState.showSnackbar(
-                                            context.getString(R.string.enter_amount_)
-                                        )
-                                    } else if (otp.isBlank()) {
+                                    if (otp.isBlank()) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_otp_)
                                         )
@@ -352,23 +259,20 @@ fun CashToCashRedeem(function: () -> Unit) {
                                         )
                                     } else {
                                         action = {
-
                                             model.web(
                                                 path = "${model.deviceData?.agent}",
-                                                data = CashToCashHelper.redeem(
+                                                data = AccountToCashHelper.details(
                                                     account = "${agentAccount.value?.account}",
-                                                    amount = amount,
                                                     mobile = "${user?.mobile}",
                                                     agentId = "${agentAccount.value?.agentID}",
                                                     pin = password,
                                                     model = model,
                                                     otp = otp,
-                                                    context = context,
-                                                    name = receiverName
+                                                    context = context
                                                 )!!,
                                                 state = { screenState = it },
                                                 onResponse = { response ->
-                                                    FundTransferModuleModuleResponse(
+                                                    ValidationModuleResponse(
                                                         response = response,
                                                         model = model,
                                                         onError = { error ->
@@ -379,16 +283,21 @@ fun CashToCashRedeem(function: () -> Unit) {
                                                                 )
                                                             }
                                                         },
-                                                        onSuccess = { message ->
-                                                            moduleCall = Response.Success(
-                                                                data = hashMapOf(
-                                                                    "message" to message!!.message,
-                                                                    "reference" to model.any.map(
-                                                                        model.any.convert(message.data)
-                                                                    )["BatchID"]
-                                                                )
-                                                            )
+                                                        onSuccess = { validation ->
                                                             screenState = ModuleState.DISPLAY
+                                                            moduleCall = Response.Confirm
+                                                            validation?.holderAmount =
+                                                                validation?.amount
+                                                            validation?.extra = hashMapOf(
+                                                                "fromName" to validation?.fromName,
+                                                                "fromMobile" to validation?.fromMobile,
+                                                                "toMobile" to validation?.toMobile
+                                                            )
+                                                            validation?.clientName =
+                                                                validation?.toName
+                                                            validation?.currency = currency
+                                                            validation?.otpHolder = otp
+                                                            validationData.value = validation
                                                             showDialog = true
                                                         }, onToken = {
                                                             work.routeData(owner, object :
@@ -460,17 +369,16 @@ fun CashToCashRedeem(function: () -> Unit) {
                     action = {
                         model.web(
                             path = "${model.deviceData?.agent}",
-                            data = otpTransactionCompleteFunc(
-                                toAccount = "account",
-                                fromAccount = "${user?.account?.firstOrNull()?.account}",
-                                amount = amount,
+                            data = CashToCashHelper.redeem(
+                                account = "${agentAccount.value?.account}",
+                                amount = "${validationData.value?.amount}",
                                 mobile = "${user?.mobile}",
-                                narration = "${validationData.value?.traceNo}",
-                                agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                agentId = "${agentAccount.value?.agentID}",
                                 pin = password,
                                 model = model,
                                 otp = otp,
-                                context = context
+                                context = context,
+                                name = "${validationData.value?.fromName}"
                             )!!,
                             state = { screenState = it },
                             onResponse = { response ->

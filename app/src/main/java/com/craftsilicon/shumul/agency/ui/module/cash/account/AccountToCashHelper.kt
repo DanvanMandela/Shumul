@@ -18,7 +18,8 @@ object AccountToCashHelper {
     fun generate(
         name: String,
         clientAccount: String,
-        account: String,
+        to: String,
+        toName: String,
         amount: String,
         context: Context,
         mobile: String,
@@ -48,11 +49,13 @@ object AccountToCashHelper {
             map["TRXAMOUNT"] = amount
             map["TRXMPIN"] = Util.newEncrypt(pin)
 
-           // map["INFOFIELD107"] = mobile
-          //  map["INFOFIELD102"] = account
+            // map["INFOFIELD107"] = mobile
+            //  map["INFOFIELD102"] = account
             map["INFOFIELD4"] = amount
             map["INFOFIELD8"] = name
             map["INFOFIELD1"] = narration
+            map["INFOFIELD3"] = to
+            map["INFOFIELD2"] = toName
 
 
             map["CALLTYPE"] = "B-"
@@ -163,6 +166,50 @@ object AccountToCashHelper {
 
 
 
+            map["CALLTYPE"] = "B-"
+            AppLogger.instance.appLog("A2C:POST:REQUEST", Gson().toJson(map))
+            PayloadRequest(
+                uniqueId = "$unique",
+                data = model.restApiSecurity.encrypt(
+                    value = JSONObject(map).toString(),
+                    kv = device!!,
+                    iv = iv!!
+                )
+            )
+        } catch (ex: JSONException) {
+            ex.printStackTrace()
+            null
+        }
+    }
+
+    fun details(
+        account: String,
+        context: Context,
+        mobile: String,
+        otp: String,
+        agentId: String,
+        pin: String,
+        model: RemoteViewModelImpl
+    ): PayloadRequest? {
+        return try {
+            val iv = model.deviceData!!.run
+            val device = model.deviceData!!.device
+            val uniqueID = getUniqueID()
+            val unique = model.preferences.uniqueID.value
+            val map = APP.data(
+                context = context,
+                storage = model.preferences,
+                action = ActionTypeEnum.OTP_DETAIL.action,
+                uniqueId = uniqueID
+            )
+
+            map["BANKACCOUNTID"] = account
+            map["ACCOUNTID"] = account
+            map["MOBILENUMBER"] = mobile
+            map["AGENTID"] = agentId
+            map["TRXMPIN"] = Util.newEncrypt(pin)
+
+            map["INFOFIELD1"] = otp
             map["CALLTYPE"] = "B-"
             AppLogger.instance.appLog("A2C:POST:REQUEST", Gson().toJson(map))
             PayloadRequest(

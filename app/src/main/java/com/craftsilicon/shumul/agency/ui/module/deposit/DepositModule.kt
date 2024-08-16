@@ -386,7 +386,7 @@ fun DepositModule(data: GlobalData) {
                                                             onSuccess = { validation ->
                                                                 screenState = ModuleState.DISPLAY
                                                                 moduleCall = Response.Confirm
-                                                                validation?.amount = amount
+                                                                validation?.holderAmount = amount
                                                                 validation?.account = account
                                                                 validationData.value = validation
                                                                 showDialog = true

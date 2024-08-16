@@ -179,7 +179,7 @@ fun DepositConfirmDialog(data: ValidationBean, action: () -> Unit, close: () -> 
                             .weight(1f)
                     )
                     Text(
-                        text = "${data.currency} ${formatMoney(data.amount ?: "")}",
+                        text = "${data.currency} ${formatMoney(data.holderAmount ?: "")}",
                         fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier

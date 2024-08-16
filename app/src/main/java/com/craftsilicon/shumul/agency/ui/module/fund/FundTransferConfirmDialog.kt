@@ -1,5 +1,6 @@
 package com.craftsilicon.shumul.agency.ui.module.fund
 
+import android.text.TextUtils
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -54,7 +55,7 @@ fun FundTransferConfirmDialog(
 ) {
 
     var otp by rememberSaveable {
-        mutableStateOf("")
+        mutableStateOf(data.otpHolder ?: "")
     }
 
     val context = LocalContext.current
@@ -116,93 +117,167 @@ fun FundTransferConfirmDialog(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.size(horizontalModulePadding))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.from_account_),
-                        fontFamily = FontFamily(Font(R.font.montserrat_medium)),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .weight(1f)
-                    )
-                    Text(
-                        text = "${data.extra["fromAccount"]}",
-                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .weight(1f)
-                    )
+
+                data.extra["fromAccount"]?.let {
+                    if (!TextUtils.isEmpty("${data.extra["fromAccount"]}")) {
+                        Spacer(modifier = Modifier.size(horizontalModulePadding))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.from_account_),
+                                fontFamily = FontFamily(Font(R.font.montserrat_medium)),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .weight(1f)
+                            )
+                            Text(
+                                text = "${data.extra["fromAccount"]}",
+                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .weight(1f)
+                            )
+                        }
+                    }
                 }
-                Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.account_name_),
-                        fontFamily = FontFamily(Font(R.font.montserrat_medium)),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .weight(1f)
-                    )
-                    Text(
-                        text = "${data.extra["fromName"]}",
-                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .weight(1f)
-                    )
+
+                data.extra["fromMobile"]?.let {
+                    if (!TextUtils.isEmpty("${data.extra["fromMobile"]}")) {
+                        Spacer(modifier = Modifier.size(horizontalModulePadding))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.from_mobile_),
+                                fontFamily = FontFamily(Font(R.font.montserrat_medium)),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .weight(1f)
+                            )
+                            Text(
+                                text = "${data.extra["fromMobile"]}",
+                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .weight(1f)
+                            )
+                        }
+                    }
                 }
-                Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.to_account_),
-                        fontFamily = FontFamily(Font(R.font.montserrat_medium)),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .weight(1f)
-                    )
-                    Text(
-                        text = "${data.account}",
-                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .weight(1f)
-                    )
+
+                data.extra["fromName"]?.let {
+                    if (!TextUtils.isEmpty("${data.extra["fromName"]}")) {
+                        Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.account_name_),
+                                fontFamily = FontFamily(Font(R.font.montserrat_medium)),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .weight(1f)
+                            )
+                            Text(
+                                text = "${data.extra["fromName"]}",
+                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .weight(1f)
+                            )
+                        }
+                    }
+
                 }
-                Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.account_name_),
-                        fontFamily = FontFamily(Font(R.font.montserrat_medium)),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .weight(1f)
-                    )
-                    Text(
-                        text = "${data.clientName}",
-                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .weight(1f)
-                    )
+
+
+                data.extra["toMobile"]?.let {
+                    if (!TextUtils.isEmpty("${data.extra["toMobile"]}")) {
+                        Spacer(modifier = Modifier.size(horizontalModulePadding))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.to_mobile_),
+                                fontFamily = FontFamily(Font(R.font.montserrat_medium)),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .weight(1f)
+                            )
+                            Text(
+                                text = "${data.extra["toMobile"]}",
+                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .weight(1f)
+                            )
+                        }
+                    }
+
+                }
+
+
+                if (!TextUtils.isEmpty(data.account) && data.account != null) {
+                    Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.to_account_),
+                            fontFamily = FontFamily(Font(R.font.montserrat_medium)),
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .weight(1f)
+                        )
+                        Text(
+                            text = "${data.account}",
+                            fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .weight(1f)
+                        )
+                    }
+                }
+
+                if (!TextUtils.isEmpty(data.clientName) && data.clientName != null) {
+                    Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.account_name_),
+                            fontFamily = FontFamily(Font(R.font.montserrat_medium)),
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .weight(1f)
+                        )
+                        Text(
+                            text = "${data.clientName}",
+                            fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .weight(1f)
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
                 Row(
@@ -218,7 +293,7 @@ fun FundTransferConfirmDialog(
                             .weight(1f)
                     )
                     Text(
-                        text = "${data.currency} ${formatMoney(data.amount ?: "")}",
+                        text = "${data.currency} ${formatMoney(data.holderAmount ?: "")}",
                         fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier

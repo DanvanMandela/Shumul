@@ -41,7 +41,7 @@ class AppPermissionImpl @Inject constructor(private val context: Context) : AppP
                 override fun onPermissionsChecked(report: MultiplePermissionsReport) {
                     if (report.areAllPermissionsGranted())
                         AppLogger.instance.appLog("Permission", "General")
-                    else generalAccess()
+
                 }
 
                 override fun onPermissionRationaleShouldBeShown(

@@ -31,9 +31,28 @@ data class ValidationBean(
     @field:SerializedName("OurBranchID")
     @field:Expose
     val branch: String?,
+    @field:SerializedName("TrxAmount")
+    @field:Expose
+    val amount: String?,
+    @field:SerializedName("ToMobile")
+    @field:Expose
+    val toMobile: String?,
+    @field:SerializedName("ToName")
+    @field:Expose
+    val toName: String?,
+    @field:SerializedName("FromMobile")
+    @field:Expose
+    val fromMobile: String?,
+    @field:SerializedName("FromName")
+    @field:Expose
+    val fromName: String?,
+    @field:SerializedName("FromAccountID")
+    @field:Expose
+    val fromAccount: String?,
 ) {
-    var amount: String? = null
+    var holderAmount: String? = null
     var account: String? = null
+    var otpHolder: String? = null
     var extra = hashMapOf<String, Any?>()
 }
 

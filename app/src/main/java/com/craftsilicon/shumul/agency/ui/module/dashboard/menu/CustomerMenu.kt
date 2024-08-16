@@ -188,5 +188,13 @@ val customerMenus = mutableListOf(
             route = Module.DataPurchase.Validate.route,
             type = NavigateModule(),
         )
+    ),
+    MenuItem(
+        title = R.string.send_remittance_,
+        icon = R.drawable.remittance,
+        navigate = NavigateTo(
+            route = Module.Remittance().route,
+            type = NavigateModule(),
+        )
     )
 )

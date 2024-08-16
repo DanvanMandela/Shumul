@@ -90,6 +90,8 @@ fun CashToCashGenerate(function: () -> Unit) {
         mutableStateOf(ModuleState.DISPLAY)
     }
 
+
+
     val accountState = model.preferences.currentAccount.collectAsState().value
     val agentAccounts = remember { SnapshotStateList<DropDownResult>() }
     val agentAccount: MutableState<Account?> = remember {
@@ -450,7 +452,8 @@ fun CashToCashGenerate(function: () -> Unit) {
                                                 )!!,
                                                 state = { screenState = it },
                                                 onResponse = { response ->
-                                                    CashToCashHelper.response(
+
+                                                    FundTransferModuleModuleResponse(
                                                         response = response,
                                                         model = model,
                                                         onError = { error ->
@@ -461,16 +464,16 @@ fun CashToCashGenerate(function: () -> Unit) {
                                                                 )
                                                             }
                                                         },
-                                                        onSuccess = { validation ->
-                                                            screenState = ModuleState.DISPLAY
-                                                            moduleCall = Response.Confirm
-                                                            validation?.amount = amount
-                                                            validation?.account = senderName
-                                                            validation?.extra = hashMapOf(
-                                                                "fromName" to user?.firstName,
-                                                                "fromAccount" to "${user?.account?.firstOrNull()?.account}"
+                                                        onSuccess = { message ->
+                                                            moduleCall = Response.Success(
+                                                                data = hashMapOf(
+                                                                    "message" to message!!.message,
+                                                                    "reference" to model.any.map(
+                                                                        model.any.convert(message.data)
+                                                                    )["BatchID"]
+                                                                )
                                                             )
-                                                            validationData.value = validation
+                                                            screenState = ModuleState.DISPLAY
                                                             showDialog = true
                                                         }, onToken = {
                                                             work.routeData(owner, object :
@@ -488,6 +491,46 @@ fun CashToCashGenerate(function: () -> Unit) {
                                                             })
                                                         }
                                                     )
+
+
+//                                                    CashToCashHelper.response(
+//                                                        response = response,
+//                                                        model = model,
+//                                                        onError = { error ->
+//                                                            screenState = ModuleState.ERROR
+//                                                            scope.launch {
+//                                                                snackState.showSnackbar(
+//                                                                    message = "$error"
+//                                                                )
+//                                                            }
+//                                                        },
+//                                                        onSuccess = { validation ->
+//                                                            screenState = ModuleState.DISPLAY
+//                                                            moduleCall = Response.Confirm
+//                                                            validation?.amount = amount
+//                                                            validation?.account = senderName
+//                                                            validation?.extra = hashMapOf(
+//                                                                "fromName" to user?.firstName,
+//                                                                "fromAccount" to "${user?.account?.firstOrNull()?.account}"
+//                                                            )
+//                                                            validationData.value = validation
+//                                                            showDialog = true
+//                                                        }, onToken = {
+//                                                            work.routeData(owner, object :
+//                                                                WorkStatus {
+//                                                                override fun workDone(b: Boolean) {
+//                                                                    if (b) action.invoke()
+//                                                                }
+//
+//                                                                override fun progress(p: Int) {
+//                                                                    AppLogger.instance.appLog(
+//                                                                        "DATA:Progress",
+//                                                                        "$p"
+//                                                                    )
+//                                                                }
+//                                                            })
+//                                                        }
+//                                                    )
                                                 }
                                             )
                                         }
@@ -547,7 +590,7 @@ fun CashToCashGenerate(function: () -> Unit) {
                                 toAccount = senderName,
                                 fromAccount = "${user?.account?.firstOrNull()?.account}",
                                 amount = amount,
-                                mobile = "${user?.mobile}",
+                                mobile = "${countryCode()}$senderMobile",
                                 narration = "${validationData.value?.traceNo}",
                                 agentId = "${user?.account?.firstOrNull()?.agentID}",
                                 pin = password,
