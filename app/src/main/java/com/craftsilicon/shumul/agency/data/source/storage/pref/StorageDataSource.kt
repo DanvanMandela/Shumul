@@ -3,6 +3,7 @@ package com.craftsilicon.shumul.agency.data.source.storage.pref
 import android.content.SharedPreferences
 import com.craftsilicon.shumul.agency.data.bean.Account
 import com.craftsilicon.shumul.agency.data.bean.AccountOpening
+import com.craftsilicon.shumul.agency.data.bean.ImageHolder
 import com.craftsilicon.shumul.agency.data.bean.UserData
 import com.craftsilicon.shumul.agency.data.bean.device.DeviceData
 
@@ -42,6 +43,10 @@ interface StorageDataSource {
 
     fun setInactivity(value: Boolean?)
     val inActivity: StateFlow<Boolean?>
+
+    fun imageHolder(value: ImageHolder)
+    fun imageHolder()
+    val imageHolder: StateFlow<ImageHolder?>
 
 }
 

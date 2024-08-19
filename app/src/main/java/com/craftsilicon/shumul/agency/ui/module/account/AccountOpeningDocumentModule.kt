@@ -71,6 +71,7 @@ import com.craftsilicon.shumul.agency.R
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.capturedImage
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.compressImage
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.convert
+import com.craftsilicon.shumul.agency.data.permission.ImageCallback
 import com.craftsilicon.shumul.agency.data.permission.imageOption
 import com.craftsilicon.shumul.agency.data.security.APP.BANK_ID
 import com.craftsilicon.shumul.agency.data.security.APP.country
@@ -109,7 +110,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
     val scope = rememberCoroutineScope()
     val user = model.preferences.userData.collectAsState().value
     val accountOpen = model.preferences.accountOpen.collectAsState().value
-
+    val images = model.preferences.imageHolder.collectAsState().value
 
     var moduleCall: ModuleCall by remember {
         mutableStateOf(Response.Confirm)
@@ -405,19 +406,16 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                 )
                             Card(
                                 onClick = {
-
-//                                    permission { access ->
-//                                        if (access) {
+                                    model.permission.imageAccess { permission ->
+//                                        if (permission) {
 //                                            sayCheese.value = SayCheese.Selfie
 //                                            launcher.imageOption()
 //                                        }
-//                                    }
-
-                                    model.permission.imageAccess { permission ->
-                                        if (permission) {
-                                            sayCheese.value = SayCheese.Selfie
-                                            launcher.imageOption()
-                                        }
+                                        data.callback?.onImage(object : ImageCallback {
+                                            override fun image(uri: String) {
+                                                val item = images
+                                            }
+                                        })
                                     }
                                 },
                                 modifier = Modifier
@@ -442,7 +440,6 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                         fontFamily = FontFamily(Font(R.font.montserrat_medium)),
                                         modifier = Modifier.align(Alignment.Center)
                                     )
-
                                     passportUri.value?.let {
                                         passport.value = compressImage(context.capturedImage(it))
                                         Image(

@@ -1,6 +1,7 @@
 package com.craftsilicon.shumul.agency.data.source.model
 
 import androidx.lifecycle.ViewModel
+import com.craftsilicon.shumul.agency.data.bean.ImageHolder
 import com.craftsilicon.shumul.agency.data.bean.ProductBean
 import com.craftsilicon.shumul.agency.data.bean.WorkSectorBean
 import com.craftsilicon.shumul.agency.data.security.interaction.InteractionDataSource
@@ -18,5 +19,6 @@ class LocalViewModelImpl @Inject constructor(
     val products: MutableStateFlow<MutableList<ProductBean>> = MutableStateFlow(mutableListOf())
 
     val sector: MutableStateFlow<MutableList<WorkSectorBean>> = MutableStateFlow(mutableListOf())
+    val images:MutableStateFlow<ImageHolder?> = MutableStateFlow(null)
 
 }

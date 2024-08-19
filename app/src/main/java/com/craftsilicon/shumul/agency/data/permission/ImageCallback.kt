@@ -10,4 +10,6 @@ interface ImageCallback {
     fun onImage(bitmap: Bitmap?, uri: String) {
         //TODO to be implemented
     }
+
+    fun image(uri: String) {}
 }

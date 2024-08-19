@@ -54,7 +54,9 @@ import com.craftsilicon.shumul.agency.R
 import com.craftsilicon.shumul.agency.data.bean.Account
 import com.craftsilicon.shumul.agency.data.bean.ValidationBean
 import com.craftsilicon.shumul.agency.data.security.APP
+import com.craftsilicon.shumul.agency.data.security.APP.TEST
 import com.craftsilicon.shumul.agency.data.security.ActivationData
+import com.craftsilicon.shumul.agency.data.source.model.LocalViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
 import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
@@ -64,6 +66,8 @@ import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
+import com.craftsilicon.shumul.agency.ui.module.account.AccountOpeningModuleProductResponse
+import com.craftsilicon.shumul.agency.ui.module.account.productFunc
 import com.craftsilicon.shumul.agency.ui.module.cash.account.AccountToCashHelper
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
@@ -75,6 +79,7 @@ import com.craftsilicon.shumul.agency.ui.util.MoneyVisualTransformation
 import com.craftsilicon.shumul.agency.ui.util.countryCode
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -88,6 +93,7 @@ fun RemittanceModuleAgent(function: () -> Unit) {
     var screenState: ModuleState by remember {
         mutableStateOf(ModuleState.DISPLAY)
     }
+    val local = hiltViewModel<LocalViewModelImpl>()
     val user = model.preferences.userData.collectAsState().value
     val scope = rememberCoroutineScope()
     var account by rememberSaveable {
@@ -100,7 +106,9 @@ fun RemittanceModuleAgent(function: () -> Unit) {
         mutableStateOf(accountState)
     }
 
-    val currencyData = remember { SnapshotStateList<DropDownResult>() }
+    val currencyData = remember {
+        SnapshotStateList<DropDownResult>()
+    }
 
     val validationData: MutableState<ValidationBean?> = remember {
         mutableStateOf(null)
@@ -139,6 +147,60 @@ fun RemittanceModuleAgent(function: () -> Unit) {
 
 
     var action: () -> Unit = {}
+
+    if (currencyData.isEmpty())
+        LaunchedEffect(key1 = Unit) {
+            delay(600)
+            action = {
+                model.web(
+                    path = "${model.deviceData?.agent}",
+                    data = RemittanceModuleHelper.currency(
+                        account = "${user?.account?.lastOrNull()?.account}",
+                        mobile = "${user?.mobile}",
+                        agentId = "${user?.account?.firstOrNull()?.agentID}",
+                        model = model,
+                        context = context
+                    )!!,
+                    state = { screenState = it },
+                    onResponse = { response ->
+                        RemittanceModuleHelper.currencyResponse(
+                            response = response,
+                            model = model,
+                            onError = { error ->
+                                screenState = ModuleState.ERROR
+                                scope.launch {
+                                    snackState.showSnackbar(
+                                        message = "$error"
+                                    )
+                                }
+                            },
+                            onSuccess = { products ->
+                                scope.launch {
+                                    local.products.value = products
+                                    screenState = ModuleState.DISPLAY
+                                    delay(200)
+                                }
+                            }, onToken = {
+                                work.routeData(owner, object :
+                                    WorkStatus {
+                                    override fun workDone(b: Boolean) {
+                                        if (b) action.invoke()
+                                    }
+
+                                    override fun progress(p: Int) {
+                                        AppLogger.instance.appLog(
+                                            "DATA:Progress",
+                                            "$p"
+                                        )
+                                    }
+                                })
+                            }
+                        )
+                    }
+                )
+            }
+            action.invoke()
+        }
 
 
     LaunchedEffect(key1 = Unit) {
@@ -333,7 +395,7 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                         Button(
                             onClick = {
                                 scope.launch {
-                                    if (account.isBlank()) {
+                                    if (agentAccount.value == null) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_account_number)
                                         )
@@ -357,17 +419,14 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                                         action = {
                                             model.web(
                                                 path = "${model.deviceData?.agent}",
-                                                data = AccountToCashHelper.generate(
-                                                    name = receiverName,
-                                                    clientAccount = account,
-                                                    to = "${user?.account?.first()?.agentID}",
+                                                data = RemittanceModuleHelper.getFee(
+                                                    account = "${agentAccount.value?.account}",
+                                                    agentId = "${agentAccount.value?.agentID}",
                                                     amount = amount,
-                                                    mobile = "${user?.mobile}",
-                                                    narration = receiverName,
-                                                    agentId = "${user?.account?.first()?.agentID}",
-                                                    pin = password,
+                                                    mobile = receiverMobile,
+                                                    context = context,
                                                     model = model,
-                                                    context = context, toName = ""
+                                                    currency = "$currency"
                                                 )!!,
                                                 state = { screenState = it },
                                                 onResponse = { response ->

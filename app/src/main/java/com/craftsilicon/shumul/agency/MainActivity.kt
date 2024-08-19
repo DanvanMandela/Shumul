@@ -62,7 +62,8 @@ class MainActivity : ComponentActivity(), AppCallback {
                 val uriContent = result.uriContent
                 if (uriContent != null) {
                     val image = this@MainActivity.capturedImage(uriContent)
-                    imageCallback?.onImage(image, uriContent.toString())
+                   // imageCallback?.onImage(image, uriContent.toString())
+                    imageCallback?.image(uriContent.toString())
                 }
             } else {
                 val exception = result.error
@@ -206,6 +207,8 @@ class MainActivity : ComponentActivity(), AppCallback {
         cropImage.imageOption()
     }
 
+
+
     override fun onUserInteraction() {
         super.onUserInteraction()
         local.interaction.onUserInteracted()
@@ -222,6 +225,7 @@ class MainActivity : ComponentActivity(), AppCallback {
             }
         }
     }
+
 
 }
 

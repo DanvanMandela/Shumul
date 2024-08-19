@@ -6,6 +6,8 @@ import com.craftsilicon.shumul.agency.data.bean.Account
 import com.craftsilicon.shumul.agency.data.bean.AccountDataTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.AccountOpening
 import com.craftsilicon.shumul.agency.data.bean.AccountOpeningTypeConverter
+import com.craftsilicon.shumul.agency.data.bean.ImageHolder
+import com.craftsilicon.shumul.agency.data.bean.ImageHolderTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.UserData
 import com.craftsilicon.shumul.agency.data.bean.UserDataTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.device.DeviceData
@@ -24,6 +26,7 @@ class SharedPreferencesStorage @Inject constructor(
     private val deviceSerializer: DeviceDataTypeConverter,
     private val accountOpening: AccountOpeningTypeConverter,
     private val account: AccountDataTypeConverter,
+    private val image: ImageHolderTypeConverter,
     @ApplicationContext context: Context,
 ) :
     StorageDataSource {
@@ -238,6 +241,36 @@ class SharedPreferencesStorage @Inject constructor(
     override val currentAccount: StateFlow<Account?>
         get() = _currentAccount
 
+
+    private val _imageHolder = MutableStateFlow(
+        image.convert(
+            sharedPreferences.getString(TAG_IMAGE_HOLDER, "")?.let {
+                security.decrypt(it)
+            }
+        )
+    )
+
+    override val imageHolder: StateFlow<ImageHolder?> = _imageHolder
+
+    override fun imageHolder(value: ImageHolder) {
+        _imageHolder.value = value
+        with(sharedPreferences.edit()) {
+            putString(
+                TAG_IMAGE_HOLDER,
+                image.convert(value)
+            )
+            apply()
+        }
+    }
+
+    override fun imageHolder() {
+        _imageHolder.value = ImageHolder()
+        with(sharedPreferences.edit()) {
+            remove(TAG_IMAGE_HOLDER)
+            apply()
+        }
+    }
+
     companion object {
         private const val SHARED_PREF_NAME = "pref"
         private const val USER_DATA = "userData"
@@ -250,5 +283,6 @@ class SharedPreferencesStorage @Inject constructor(
         private const val TAG_TIME_OUT = "timeout"
         private const val TAG_IN_ACTIVITY = "inActivity"
         private const val TAG_CURRENT_ACCOUNT = "currentAccount"
+        private const val TAG_IMAGE_HOLDER = "imageHolder"
     }
 }
