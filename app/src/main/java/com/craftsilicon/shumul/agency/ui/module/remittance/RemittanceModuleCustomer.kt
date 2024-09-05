@@ -1,5 +1,7 @@
 package com.craftsilicon.shumul.agency.ui.module.remittance
 
+import android.icu.math.BigDecimal
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -22,6 +26,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -54,19 +59,24 @@ import com.craftsilicon.shumul.agency.data.bean.Account
 import com.craftsilicon.shumul.agency.data.bean.ValidationBean
 import com.craftsilicon.shumul.agency.data.security.APP
 import com.craftsilicon.shumul.agency.data.security.ActivationData
+import com.craftsilicon.shumul.agency.data.source.model.LocalViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
 import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
+import com.craftsilicon.shumul.agency.ui.module.ConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
 import com.craftsilicon.shumul.agency.ui.module.cash.account.AccountToCashHelper
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
+import com.craftsilicon.shumul.agency.ui.module.validation.ValidationHelper
 import com.craftsilicon.shumul.agency.ui.module.validation.ValidationModuleResponse
+import com.craftsilicon.shumul.agency.ui.module.withdrawal.WithdrawalModuleHelper.otpTransactionAgent
+import com.craftsilicon.shumul.agency.ui.module.withdrawal.customerOtpTransactionCompleteFunc
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
@@ -74,18 +84,20 @@ import com.craftsilicon.shumul.agency.ui.util.MoneyVisualTransformation
 import com.craftsilicon.shumul.agency.ui.util.countryCode
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @Composable
-fun  RemittanceModuleCustomer(function: () -> Unit) {
+fun RemittanceModuleCustomer(function: () -> Unit) {
     val context = LocalContext.current
     val work = hiltViewModel<WorkViewModel>()
     val owner = LocalLifecycleOwner.current
     val model: RemoteViewModelImpl = hiltViewModel()
+    val local = hiltViewModel<LocalViewModelImpl>()
     val snackState = remember { SnackbarHostState() }
     var screenState: ModuleState by remember {
-        mutableStateOf(ModuleState.DISPLAY)
+        mutableStateOf(ModuleState.LOADING)
     }
     val user = model.preferences.userData.collectAsState().value
     val scope = rememberCoroutineScope()
@@ -93,9 +105,16 @@ fun  RemittanceModuleCustomer(function: () -> Unit) {
         mutableStateOf("")
     }
 
+    val currenciesData = local.currency.collectAsState().value
+
+
+    var narration by rememberSaveable {
+        mutableStateOf("")
+    }
+
     val accountState = model.preferences.currentAccount.collectAsState().value
 
-    val agentAccounts = remember { SnapshotStateList<DropDownResult>() }
+
     val agentAccount: MutableState<Account?> = remember {
         mutableStateOf(accountState)
     }
@@ -105,6 +124,9 @@ fun  RemittanceModuleCustomer(function: () -> Unit) {
     }
 
 
+    var currencyId by rememberSaveable {
+        mutableStateOf(user?.account?.first()?.currency)
+    }
     var currency by rememberSaveable {
         mutableStateOf(user?.account?.first()?.currency)
     }
@@ -114,11 +136,30 @@ fun  RemittanceModuleCustomer(function: () -> Unit) {
         mutableStateOf("")
     }
 
+
+    var senderName by rememberSaveable {
+        mutableStateOf("")
+    }
+
+    var senderMobile by rememberSaveable {
+        mutableStateOf("")
+    }
+
+
     var receiverMobile by rememberSaveable {
         mutableStateOf("")
     }
 
+    val currencyData = remember {
+        SnapshotStateList<DropDownResult>()
+    }
+
+
     var amount by rememberSaveable {
+        mutableStateOf("")
+    }
+
+    var totalAmount by rememberSaveable {
         mutableStateOf("")
     }
 
@@ -138,6 +179,76 @@ fun  RemittanceModuleCustomer(function: () -> Unit) {
 
     var action: () -> Unit = {}
 
+    if (currencyData.isEmpty())
+        LaunchedEffect(key1 = Unit) {
+            delay(600)
+            action = {
+                model.web(
+                    path = "${model.deviceData?.agent}",
+                    data = RemittanceModuleHelper.currency(
+                        account = "${user?.account?.lastOrNull()?.account}",
+                        mobile = "${user?.mobile}",
+                        agentId = "${user?.account?.firstOrNull()?.agentID}",
+                        model = model,
+                        context = context
+                    )!!,
+                    state = { screenState = it },
+                    onResponse = { response ->
+                        RemittanceModuleHelper.currencyResponse(
+                            response = response,
+                            model = model,
+                            onError = { error ->
+                                screenState = ModuleState.ERROR
+                                scope.launch {
+                                    snackState.showSnackbar(
+                                        message = "$error"
+                                    )
+                                }
+                            },
+                            onSuccess = { beans ->
+                                scope.launch {
+                                    local.currency.value = beans
+                                    screenState = ModuleState.DISPLAY
+                                    delay(200)
+                                }
+                            }, onToken = {
+                                work.routeData(owner, object :
+                                    WorkStatus {
+                                    override fun workDone(b: Boolean) {
+                                        if (b) action.invoke()
+                                    }
+
+                                    override fun progress(p: Int) {
+                                        AppLogger.instance.appLog(
+                                            "DATA:Progress",
+                                            "$p"
+                                        )
+                                    }
+                                })
+                            }
+                        )
+                    }
+                )
+            }
+            action.invoke()
+        }
+
+    if (currenciesData.isNotEmpty())
+        LaunchedEffect(key1 = Unit) {
+            currenciesData.forEach {
+                currencyData.apply {
+                    removeIf { p -> p.key == it.id }
+                    add(
+                        DropDownResult(
+                            key = it.id,
+                            desc = it.description,
+                            display = it.id == "YER"
+                        )
+                    )
+                }
+            }
+
+        }
 
 
     Box {
@@ -154,7 +265,8 @@ fun  RemittanceModuleCustomer(function: () -> Unit) {
                     Column(
                         modifier = Modifier
                             .background(MaterialTheme.colorScheme.background)
-                            .fillMaxSize(),
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
 
@@ -166,12 +278,10 @@ fun  RemittanceModuleCustomer(function: () -> Unit) {
                         ) {
                             EditDropDown(
                                 label = stringResource(id = R.string.currency_),
-                                data = MutableStateFlow(agentAccounts)
+                                data = MutableStateFlow(currencyData)
                             ) { result ->
-                                agentAccount.value = result.key as Account
-                                agentAccount.value?.currency?.let {
-                                    currency = it
-                                }
+                                currencyId = result.key as String
+                                currency = result.desc
                             }
                         }
                         Spacer(modifier = Modifier.size(16.dp))
@@ -251,8 +361,85 @@ fun  RemittanceModuleCustomer(function: () -> Unit) {
                                 )
                             }
                         )
-                        Spacer(modifier = Modifier.size(16.dp))
 
+
+                        Spacer(modifier = Modifier.size(16.dp))
+                        OutlinedTextField(
+                            value = senderName,
+                            onValueChange = { senderName = it },
+                            label = {
+                                Text(
+                                    text = stringResource(id = R.string.sender_name_),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
+                                )
+                            }, modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = horizontalModulePadding),
+                            textStyle = TextStyle(
+                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                fontSize = MaterialTheme.typography.labelLarge.fontSize
+                            ),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Text
+                            )
+                        )
+                        Spacer(modifier = Modifier.size(16.dp))
+                        OutlinedTextField(
+                            value = senderMobile,
+                            onValueChange = { senderMobile = it },
+                            label = {
+                                Text(
+                                    text = stringResource(id = R.string.receiver_mobile_),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
+                                )
+                            }, modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = horizontalModulePadding),
+                            textStyle = TextStyle(
+                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                fontSize = MaterialTheme.typography.labelLarge.fontSize
+                            ),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Phone
+                            ), prefix = {
+                                Text(
+                                    text = countryCode(),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold))
+                                )
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.size(16.dp))
+                        OutlinedTextField(
+                            value = narration,
+                            onValueChange = { narration = it },
+                            label = {
+                                Text(
+                                    text = stringResource(id = R.string.narration_),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
+                                )
+                            }, modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = horizontalModulePadding),
+                            textStyle = TextStyle(
+                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                fontSize = MaterialTheme.typography.labelLarge.fontSize
+                            ),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Text
+                            )
+                        )
+                        Spacer(modifier = Modifier.size(16.dp))
                         OutlinedTextField(
                             value = amount,
                             onValueChange = { amount = it },
@@ -347,6 +534,18 @@ fun  RemittanceModuleCustomer(function: () -> Unit) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_receiver_mobile_)
                                         )
+                                    } else if (senderName.isBlank()) {
+                                        snackState.showSnackbar(
+                                            context.getString(R.string.enter_sender_name_)
+                                        )
+                                    } else if (senderMobile.isBlank()) {
+                                        snackState.showSnackbar(
+                                            context.getString(R.string.enter_sender_mobile_)
+                                        )
+                                    } else if (narration.isBlank()) {
+                                        snackState.showSnackbar(
+                                            context.getString(R.string.enter_narration_)
+                                        )
                                     } else if (password.isBlank()) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_pin_)
@@ -355,18 +554,16 @@ fun  RemittanceModuleCustomer(function: () -> Unit) {
                                         action = {
                                             model.web(
                                                 path = "${model.deviceData?.agent}",
-                                                data = AccountToCashHelper.generate(
-                                                    name = receiverName,
-                                                    clientAccount = account,
-                                                    to = "${user?.account?.first()?.agentID}",
+                                                data = otpTransactionAgent(
+                                                    toAccount = account,
+                                                    fromAccount = "${agentAccount.value?.account}",
                                                     amount = amount,
                                                     mobile = "${user?.mobile}",
-                                                    narration = receiverName,
-                                                    agentId = "${user?.account?.first()?.agentID}",
+                                                    narration = narration,
+                                                    agentId = "${agentAccount.value?.agentID}",
                                                     pin = password,
                                                     model = model,
-                                                    context = context,
-                                                   toName = ""
+                                                    context = context
                                                 )!!,
                                                 state = { screenState = it },
                                                 onResponse = { response ->
@@ -381,19 +578,137 @@ fun  RemittanceModuleCustomer(function: () -> Unit) {
                                                                 )
                                                             }
                                                         },
-                                                        onSuccess = { validation ->
-                                                            screenState = ModuleState.DISPLAY
-                                                            moduleCall = Response.Confirm
-                                                            validation?.holderAmount = amount
-                                                            validation?.account = receiverMobile
-                                                            validation?.extra = hashMapOf(
-                                                                "fromName" to "",
-                                                                "fromAccount" to account
-                                                            )
-                                                            validation?.clientName = receiverName
-                                                            validation?.currency = currency
-                                                            validationData.value = validation
-                                                            showDialog = true
+                                                        onSuccess = { accountValidation ->
+
+
+                                                            action = {
+                                                                if (currency == accountValidation?.currency)
+                                                                    model.web(
+                                                                        path = "${model.deviceData?.agent}",
+                                                                        data = RemittanceModuleHelper.getFee(
+                                                                            account = account,
+                                                                            agentId = "${agentAccount.value?.agentID}",
+                                                                            amount = amount,
+                                                                            mobile = receiverMobile,
+                                                                            context = context,
+                                                                            model = model,
+                                                                            currency = "$currencyId"
+                                                                        )!!,
+                                                                        state = {
+                                                                            screenState = it
+                                                                        },
+                                                                        onResponse = { response ->
+                                                                            ValidationHelper.validateHash(
+                                                                                response = response,
+                                                                                model = model,
+                                                                                onError = { error ->
+                                                                                    screenState =
+                                                                                        ModuleState.ERROR
+                                                                                    scope.launch {
+                                                                                        snackState.showSnackbar(
+                                                                                            message = "$error"
+                                                                                        )
+                                                                                    }
+                                                                                },
+                                                                                onSuccess = { validation ->
+                                                                                    screenState =
+                                                                                        ModuleState.DISPLAY
+                                                                                    moduleCall =
+                                                                                        Response.Confirm
+                                                                                    totalAmount =
+                                                                                        hashMapOf(
+                                                                                            "A" to validation["agentFee"],
+                                                                                            "B" to validation["networkFee"],
+                                                                                            "C" to validation["destFee"],
+                                                                                            "D" to amount
+                                                                                        ).sumOf()
+                                                                                    validationData.value =
+                                                                                        accountValidation?.apply {
+                                                                                            isOtp =
+                                                                                                true
+                                                                                            display =
+                                                                                                linkedMapOf(
+                                                                                                    context.getString(
+                                                                                                        R.string.from_account_
+                                                                                                    )
+                                                                                                            to account,
+                                                                                                    context.getString(
+                                                                                                        R.string.sender_name_
+                                                                                                    )
+                                                                                                            to senderName,
+                                                                                                    context.getString(
+                                                                                                        R.string.sender_mobile_
+                                                                                                    )
+                                                                                                            to "${countryCode()}$senderMobile",
+                                                                                                    context.getString(
+                                                                                                        R.string.receiver_name_
+                                                                                                    )
+                                                                                                            to receiverName,
+                                                                                                    context.getString(
+                                                                                                        R.string.receiver_mobile_
+                                                                                                    )
+                                                                                                            to "${countryCode()}$receiverMobile",
+                                                                                                    context.getString(
+                                                                                                        R.string.currency_
+                                                                                                    )
+                                                                                                            to currency,
+                                                                                                    context.getString(
+                                                                                                        R.string.fee_amount_
+                                                                                                    )
+                                                                                                            to hashMapOf(
+                                                                                                        "A" to validation["agentFee"],
+                                                                                                        "B" to validation["networkFee"],
+                                                                                                        "C" to validation["destFee"]
+                                                                                                    ).sumOf(),
+                                                                                                    context.getString(
+                                                                                                        R.string.amount_
+                                                                                                    )
+                                                                                                            to amount,
+                                                                                                    context.getString(
+                                                                                                        R.string.total_amount_
+                                                                                                    )
+                                                                                                            to totalAmount,
+                                                                                                )
+                                                                                            extra =
+                                                                                                validation
+                                                                                            this.amount =
+                                                                                                totalAmount
+                                                                                        }
+                                                                                    showDialog =
+                                                                                        true
+                                                                                }, onToken = {
+                                                                                    work.routeData(
+                                                                                        owner,
+                                                                                        object :
+                                                                                            WorkStatus {
+                                                                                            override fun workDone(
+                                                                                                b: Boolean
+                                                                                            ) {
+                                                                                                if (b) action.invoke()
+                                                                                            }
+
+                                                                                            override fun progress(
+                                                                                                p: Int
+                                                                                            ) {
+                                                                                                AppLogger.instance.appLog(
+                                                                                                    "DATA:Progress",
+                                                                                                    "$p"
+                                                                                                )
+                                                                                            }
+                                                                                        })
+                                                                                }
+                                                                            )
+                                                                        }
+                                                                    )
+                                                                else scope.launch {
+                                                                    snackState.showSnackbar(
+                                                                        message = context.getString(
+                                                                            R.string.currency_miss_match_
+                                                                        )
+                                                                    )
+                                                                }
+                                                            }
+                                                            action.invoke()
                                                         }, onToken = {
                                                             work.routeData(owner, object :
                                                                 WorkStatus {
@@ -430,6 +745,8 @@ fun  RemittanceModuleCustomer(function: () -> Unit) {
                             )
                         }
 
+                        Spacer(modifier = Modifier.size(horizontalModulePadding))
+
                     }
                 }
 
@@ -448,80 +765,104 @@ fun  RemittanceModuleCustomer(function: () -> Unit) {
             )
         }
 
-        if (showDialog) when (val s = moduleCall) {
-            is Response.Success -> SuccessDialog(
-                message = "${s.data["message"]}",
-                reference = "${s.data["reference"]}",
-                action = {
-                    showDialog = false
-                    function()
-                })
+        if (showDialog)
 
-            is Response.Confirm -> FundTransferConfirmDialog(
-                data = validationData.value!!,
-                action = { otp ->
-                    showDialog = false
+            when (val s = moduleCall) {
+                is Response.Success -> SuccessDialog(
+                    message = "${s.data["message"]}",
+                    reference = BigDecimal(
+                        "${s.data["reference"] ?: 0}"
+                    ).toString(),
                     action = {
-                        model.web(
-                            path = "${model.deviceData?.agent}",
-                            data = AccountToCashHelper.post(
-                                account = account,
-                                branch = "${validationData.value?.branch}",
-                                amount = amount,
-                                mobile = "${user?.mobile}",
-                                trx = "${validationData.value?.tracNo}",
-                                agentId = "${user?.account?.first()?.agentID}",
-                                pin = password,
-                                model = model,
-                                otp = otp,
-                                context = context
-                            )!!,
-                            state = { screenState = it },
-                            onResponse = { response ->
-                                FundTransferModuleModuleResponse(
-                                    response = response,
-                                    model = model,
-                                    onError = { error ->
-                                        screenState = ModuleState.ERROR
-                                        scope.launch {
-                                            snackState.showSnackbar(
-                                                message = "$error"
-                                            )
-                                        }
-                                    },
-                                    onSuccess = { message ->
-                                        moduleCall = Response.Success(
-                                            data = hashMapOf(
-                                                "message" to message!!.message,
-                                                "reference" to model.any.map(
-                                                    model.any.convert(message.data)
-                                                )["BatchID"]
-                                            )
-                                        )
-                                        screenState = ModuleState.DISPLAY
-                                        showDialog = true
-                                    }, onToken = {
-                                        work.routeData(owner, object :
-                                            WorkStatus {
-                                            override fun workDone(b: Boolean) {
-                                                if (b) action.invoke()
-                                            }
+                        showDialog = false
+                        function()
+                    })
 
-                                            override fun progress(p: Int) {
-                                                AppLogger.instance.appLog(
-                                                    "DATA:Progress",
-                                                    "$p"
+                is Response.Confirm -> ConfirmDialog(
+                    data = validationData.value!!,
+                    action = { otp ->
+                        showDialog = false
+                        action = {
+                            model.web(
+                                path = "${model.deviceData?.agent}",
+                                data = RemittanceModuleHelper.remittanceCustomer(
+                                    account = account,
+                                    mobile = "${user?.mobile}",
+                                    agentId = "${user?.account?.first()?.agentID}",
+                                    pin = password,
+                                    model = model,
+                                    context = context,
+                                    data = hashMapOf(
+                                        "narration" to narration,
+                                        "senderName" to senderName,
+                                        "senderPhone" to senderMobile,
+                                        "charge" to totalAmount,
+                                        "currencyID" to "$currencyId",
+                                        "receiverName" to receiverName,
+                                        "receiverPhone" to "${countryCode()}$receiverMobile",
+                                        "amount" to amount,
+                                        "feeID" to "${
+                                            validationData
+                                                .value?.extra?.get("feeId")
+                                                .toString()
+                                                .toDouble()
+                                                .toInt()
+                                        }"
+                                    ),
+                                    otp = otp
+                                )!!,
+                                state = { screenState = it },
+                                onResponse = { response ->
+
+                                    FundTransferModuleModuleResponse(
+                                        response = response,
+                                        model = model,
+                                        onError = { error ->
+                                            screenState = ModuleState.ERROR
+                                            scope.launch {
+                                                snackState.showSnackbar(
+                                                    message = "$error"
                                                 )
                                             }
-                                        })
-                                    }
-                                )
-                            }
-                        )
-                    }
-                    action.invoke()
-                },
-                close = { showDialog = false })
-        }
+                                        },
+                                        onSuccess = { message ->
+                                            val convertedData = model.any.map(
+                                                model.any.convert(message!!.data)
+                                            )
+                                            val referenceValue = convertedData["BatchID"]
+                                                ?: convertedData["referance"]
+                                            val numberAsLong =
+                                                (referenceValue as? Number)?.toLong() ?: 0L
+                                            moduleCall = Response.Success(
+                                                data = hashMapOf(
+                                                    "message" to message.message,
+                                                    "reference" to numberAsLong
+                                                )
+                                            )
+                                            screenState = ModuleState.DISPLAY
+                                            showDialog = true
+                                        }, onToken = {
+                                            work.routeData(owner, object :
+                                                WorkStatus {
+                                                override fun workDone(b: Boolean) {
+                                                    if (b) action.invoke()
+                                                }
+
+                                                override fun progress(p: Int) {
+                                                    AppLogger.instance.appLog(
+                                                        "DATA:Progress",
+                                                        "$p"
+                                                    )
+                                                }
+                                            })
+                                        }
+                                    )
+                                }
+                            )
+                        }
+                        action.invoke()
+                    },
+                    close = { showDialog = false })
+            }
     }
 }

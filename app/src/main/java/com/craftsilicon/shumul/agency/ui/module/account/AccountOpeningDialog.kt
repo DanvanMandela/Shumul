@@ -1,6 +1,7 @@
 package com.craftsilicon.shumul.agency.ui.module.account
 
 import android.graphics.Bitmap
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -25,22 +26,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.craftsilicon.shumul.agency.R
 import com.craftsilicon.shumul.agency.data.bean.AccountOpening
+import kotlinx.coroutines.Dispatchers
 
 @Composable
 fun AccountOpeningDialog(
-    selfie: Bitmap,
+    selfie: Uri,
     user: AccountOpening?,
     action: () -> Unit,
     close: () -> Unit
 ) {
+    val context = LocalContext.current
     Dialog(onDismissRequest = { close() }) {
         Card(
             modifier = Modifier
@@ -84,14 +91,19 @@ fun AccountOpeningDialog(
                         containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     ), shape = CircleShape
                 ) {
-                    Image(
-                        bitmap = selfie.asImageBitmap(),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(selfie)
+                            .dispatcher(Dispatchers.IO)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .memoryCachePolicy(CachePolicy.ENABLED)
+                            .build(),
+                        contentDescription = "Image Description",
                         modifier = Modifier
                             .padding(2.dp)
                             .size(80.dp)
-                            .clip(CircleShape)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop,
                     )
                 }
                 Spacer(modifier = Modifier.size(ButtonDefaults.IconSize))
@@ -266,7 +278,7 @@ fun AccountOpeningDialog(
                 Spacer(modifier = Modifier.size(ButtonDefaults.IconSize))
                 Row(modifier = Modifier.fillMaxWidth()) {
                     OutlinedButton(
-                        onClick = { close()},
+                        onClick = { close() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)

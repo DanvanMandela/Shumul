@@ -41,6 +41,7 @@ import com.craftsilicon.shumul.agency.ui.module.login.ActivationModule
 import com.craftsilicon.shumul.agency.ui.module.login.LoginModule
 import com.craftsilicon.shumul.agency.ui.module.pin.ChangePin
 import com.craftsilicon.shumul.agency.ui.module.remittance.RemittanceModule
+import com.craftsilicon.shumul.agency.ui.module.remittance.pay.PayRemittanceModule
 import com.craftsilicon.shumul.agency.ui.module.withdrawal.WithdrawalModule
 import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
 import com.craftsilicon.shumul.agency.ui.navigation.Module
@@ -178,15 +179,17 @@ class MainActivity : ComponentActivity(), AppCallback {
                             AirtimeModule(data = global)
                         }
 
-                        setComposable(route = Module.DataPurchase.Validate.route) {
+                        setComposable(route = Module.DataPurchase().route) {
                             DataPurchaseModule(data = global)
                         }
-                        setComposable(route = Module.DataPurchase.Subscribe.route) {
-                            DataPurchaseSubscribeModule(data = global)
-                        }
+
 
                         setComposable(route = Module.Remittance().route) {
                             RemittanceModule(data = global)
+                        }
+
+                        setComposable(route = Module.PayRemittance().route) {
+                            PayRemittanceModule(data = global)
                         }
 
                     }

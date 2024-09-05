@@ -13,7 +13,7 @@ class AuthorizationInterceptor @Inject constructor(
         var request = chain.request()
         request = request.newBuilder().header(
             "Authorization",
-            "Bearer ${storage.deviceData.value?.token}"
+            "Bearer ${storage.token.value}"
         ).build()
         return chain.proceed(request)
     }

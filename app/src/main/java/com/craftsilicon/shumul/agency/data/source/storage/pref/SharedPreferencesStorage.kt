@@ -6,6 +6,8 @@ import com.craftsilicon.shumul.agency.data.bean.Account
 import com.craftsilicon.shumul.agency.data.bean.AccountDataTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.AccountOpening
 import com.craftsilicon.shumul.agency.data.bean.AccountOpeningTypeConverter
+import com.craftsilicon.shumul.agency.data.bean.AppUserState
+import com.craftsilicon.shumul.agency.data.bean.AppUserStateTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.ImageHolder
 import com.craftsilicon.shumul.agency.data.bean.ImageHolderTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.UserData
@@ -27,6 +29,7 @@ class SharedPreferencesStorage @Inject constructor(
     private val accountOpening: AccountOpeningTypeConverter,
     private val account: AccountDataTypeConverter,
     private val image: ImageHolderTypeConverter,
+    private val appUser: AppUserStateTypeConverter,
     @ApplicationContext context: Context,
 ) :
     StorageDataSource {
@@ -92,6 +95,7 @@ class SharedPreferencesStorage @Inject constructor(
 
     override val userData: StateFlow<UserData?>
         get() = _userData
+
 
     private val _login = MutableStateFlow(
         sharedPreferences.getBoolean(LOGIN_STATE, false)
@@ -183,7 +187,7 @@ class SharedPreferencesStorage @Inject constructor(
     private val _timeout = MutableStateFlow(
         sharedPreferences.getLong(
             TAG_TIME_OUT,
-            120000
+            180000
         )
     )
     override val timeout: StateFlow<Long?>
@@ -252,6 +256,23 @@ class SharedPreferencesStorage @Inject constructor(
 
     override val imageHolder: StateFlow<ImageHolder?> = _imageHolder
 
+    private val _token = MutableStateFlow(
+        sharedPreferences.getString(TAG_TOKEN, "")
+    )
+
+    override fun token(value: String) {
+        _token.value = value
+        with(sharedPreferences.edit()) {
+            putString(
+                TAG_TOKEN,
+                value
+            )
+            apply()
+        }
+    }
+
+    override val token: StateFlow<String?> = _token
+
     override fun imageHolder(value: ImageHolder) {
         _imageHolder.value = value
         with(sharedPreferences.edit()) {
@@ -271,6 +292,27 @@ class SharedPreferencesStorage @Inject constructor(
         }
     }
 
+    private val _appUserState = MutableStateFlow(
+        appUser.convert(
+            sharedPreferences.getString(TAG_APP_USER_STATE, "")?.let {
+                security.decrypt(it)
+            }
+        )
+    )
+
+    override fun appUserState(value: AppUserState) {
+        _appUserState.value = value
+        with(sharedPreferences.edit()) {
+            putString(
+                TAG_APP_USER_STATE,
+                appUser.convert(value)
+            )
+            apply()
+        }
+    }
+
+    override val appUserState: StateFlow<AppUserState?> = _appUserState
+
     companion object {
         private const val SHARED_PREF_NAME = "pref"
         private const val USER_DATA = "userData"
@@ -284,5 +326,7 @@ class SharedPreferencesStorage @Inject constructor(
         private const val TAG_IN_ACTIVITY = "inActivity"
         private const val TAG_CURRENT_ACCOUNT = "currentAccount"
         private const val TAG_IMAGE_HOLDER = "imageHolder"
+        private const val TAG_TOKEN = "tagToken"
+        private const val TAG_APP_USER_STATE = "tagAppUserState"
     }
 }

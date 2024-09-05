@@ -1,5 +1,6 @@
 package com.craftsilicon.shumul.agency.ui.module.data
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +51,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
 import com.craftsilicon.shumul.agency.R
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
@@ -60,262 +63,94 @@ import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
 import com.craftsilicon.shumul.agency.ui.module.dashboard.balance.BalanceModuleResponse
 import com.craftsilicon.shumul.agency.ui.module.dashboard.balance.balanceFunc
+import com.craftsilicon.shumul.agency.ui.module.dashboard.menu.HORadioButtons
+import com.craftsilicon.shumul.agency.ui.module.remittance.pay.PayCustomerRemittance
+import com.craftsilicon.shumul.agency.ui.module.remittance.pay.PayRemittanceAgent
 import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
+import com.craftsilicon.shumul.agency.ui.navigation.Module
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.navigation.NavigateDialog
 import com.craftsilicon.shumul.agency.ui.navigation.NavigationType
+import com.craftsilicon.shumul.agency.ui.navigation.setComposable
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
 import com.craftsilicon.shumul.agency.ui.util.countryCode
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
+import dataPurchase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import remittancePay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DataPurchaseModule(data: GlobalData) {
-    val context = LocalContext.current
-    val work = hiltViewModel<WorkViewModel>()
-    val owner = LocalLifecycleOwner.current
-    val model: RemoteViewModelImpl = hiltViewModel()
-    val snackState = remember { SnackbarHostState() }
-
-    var screenState: ModuleState by remember {
-        mutableStateOf(ModuleState.DISPLAY)
-    }
-
-    val scope = rememberCoroutineScope()
-
-    var mno: HashMap<String, Any?> = remember {
-        hashMapOf()
-    }
-    var mobile by rememberSaveable {
-        mutableStateOf("")
-    }
-
-    val user = model.preferences.userData.collectAsState().value
-    val mnoData = remember { SnapshotStateList<DropDownResult>() }
-
-    var navType: NavigationType? by remember {
-        mutableStateOf(null)
-    }
-
-    var showDialog by remember { mutableStateOf(false) }
-
-    var action: () -> Unit = {}
-
-    Box {
-
-        when (screenState) {
-            ModuleState.LOADING -> LoadingModule()
-            ModuleState.ERROR,
-            ModuleState.DISPLAY -> Column(
+    val navController = rememberNavController()
+    CompositionLocalProvider(LocalLayoutDirection provides layoutDirection()) {
+        Scaffold(topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(id = R.string.data_purchase_),
+                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.primary
+                ), navigationIcon = {
+                    IconButton(onClick = {
+                        data.controller.navigateUp()
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_arrow_back_24),
+                            contentDescription = null,
+                            modifier = Modifier.size(ButtonDefaults.IconSize),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            )
+        }) { padding ->
+            Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White),
+                    .padding(padding)
+                    .background(MaterialTheme.colorScheme.background)
+                    .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                CompositionLocalProvider(LocalLayoutDirection provides layoutDirection()) {
-                    Scaffold(topBar = {
-                        TopAppBar(
-                            title = {
-                                Text(
-                                    text = stringResource(id = R.string.data_purchase_),
-                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.background,
-                                titleContentColor = MaterialTheme.colorScheme.primary
-                            ), navigationIcon = {
-                                IconButton(onClick = {
-                                    data.controller.navigateUp()
-                                }) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(ButtonDefaults.IconSize),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-                        )
-                    }) { padding ->
-                        Column(
-                            modifier = Modifier
-                                .padding(padding)
-                                .background(MaterialTheme.colorScheme.background)
-                                .fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Spacer(modifier = Modifier.size(16.dp))
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = horizontalModulePadding)
-                            ) {
-                                EditDropDown(
-                                    label = stringResource(id = R.string.mno_),
-                                    data = MutableStateFlow(mnoData)
-                                ) { result ->
-                                    mno = hashMapOf(
-                                        "mno" to result.desc,
-                                        "id" to result.key
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.size(16.dp))
-                            OutlinedTextField(
-                                value = mobile,
-                                onValueChange = { mobile = it },
-                                label = {
-                                    Text(
-                                        text = stringResource(id = R.string.mobile_number_),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontFamily = FontFamily(Font(R.font.montserrat_medium))
-                                    )
-                                }, modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = horizontalModulePadding),
-                                textStyle = TextStyle(
-                                    fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                    fontSize = MaterialTheme.typography.labelLarge.fontSize
-                                ),
-                                keyboardOptions = KeyboardOptions(
-                                    imeAction = ImeAction.Done,
-                                    keyboardType = KeyboardType.Phone
-                                ), prefix = {
-                                    Text(
-                                        text = countryCode(),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold))
-                                    )
-                                }
-                            )
-                            Spacer(modifier = Modifier.size(horizontalModulePadding))
-                            Button(
-                                onClick = {
-                                    scope.launch {
-                                        if (mno.isEmpty()) {
-                                            snackState.showSnackbar(
-                                                context.getString(R.string.select_service_provider_)
-                                            )
-                                        } else if (mobile.isEmpty()) {
-                                            snackState.showSnackbar(
-                                                context.getString(R.string.enter_mobile_number_)
-                                            )
-                                        } else {
-                                            action = {
-                                                model.web(
-                                                    path = "${model.deviceData?.agent}",
-                                                    data = balanceFunc(
-                                                        account = "$",
-                                                        fromAccount = "${user?.account?.firstOrNull()?.account}",
-                                                        mobile = "${user?.mobile}",
-                                                        agentId = "${user?.account?.firstOrNull()?.agentID}",
-                                                        model = model,
-                                                        context = context,
-                                                        pin = "password"
-                                                    )!!,
-                                                    state = { screenState = it },
-                                                    onResponse = { response ->
-                                                        BalanceModuleResponse(
-                                                            response = response,
-                                                            model = model,
-                                                            onError = { error ->
-                                                                screenState = ModuleState.ERROR
-                                                                scope.launch {
-                                                                    snackState.showSnackbar(
-                                                                        message = "$error"
-                                                                    )
-                                                                }
-                                                            },
-                                                            onSuccess = { message ->
-                                                                scope.launch {
-                                                                    screenState =
-                                                                        ModuleState.DISPLAY
-                                                                    delay(200)
-                                                                    navType = NavigateDialog
-                                                                        .Balance
-                                                                        .OnBalance(message!!)
-                                                                    showDialog = true
-                                                                }
-                                                            }, onToken = {
-                                                                work.routeData(owner, object :
-                                                                    WorkStatus {
-                                                                    override fun workDone(b: Boolean) {
-                                                                        if (b) action.invoke()
-                                                                    }
-
-                                                                    override fun progress(p: Int) {
-                                                                        AppLogger.instance.appLog(
-                                                                            "DATA:Progress",
-                                                                            "$p"
-                                                                        )
-                                                                    }
-                                                                })
-                                                            }
-                                                        )
-                                                    }
-                                                )
-                                            }
-                                            action.invoke()
-                                        }
-
-                                    }
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp)
-                                    .padding(horizontal = horizontalModulePadding)
-                            ) {
-                                Text(
-                                    text = stringResource(id = R.string.submit_),
-                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                )
-                            }
-
+                HORadioButtons(
+                    radioOptions = dataPurchase,
+                    onClick = {
+                        navController.navigate(it.navigate.route)
+                    }
+                )
+                NavHost(
+                    navController = navController,
+                    startDestination = Module.Remittance.Agent.route
+                ) {
+                    setComposable(route = Module.DataPurchase.Agent.route) {
+                        BackHandler(enabled = true) {
+                            data.controller.navigateUp()
                         }
+                        DataPurchaseAgentModule(function = {
+                            data.controller.navigateUp()
+                        })
                     }
 
+                    setComposable(route = Module.PayRemittance.Customer.route) {
+                        BackHandler(enabled = true) {
+                            data.controller.navigateUp()
+                        }
+                        DataPurchaseCustomerModule(function = {
+                            data.controller.navigateUp()
+                        })
+                    }
                 }
-
             }
-
-            ModuleState.SUCCESS -> {}
         }
-
-        SnackbarHost(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            hostState = snackState
-        ) { snack: SnackbarData ->
-            CustomSnackBar(
-                snack.visuals.message,
-                isRtl = false
-            )
-        }
-
-        if (showDialog) when (navType) {
-            is NavigateDialog.Balance -> when (val s = navType) {
-                is NavigateDialog.Balance.OnBalance -> SuccessDialog(
-                    message = "${s.data.message}",
-                    action = {
-                        showDialog = false
-                        data.controller.navigateUp()
-                    })
-
-                else -> throw Exception("Not implemented")
-            }
-
-            else -> throw Exception("Not implemented")
-        }
-
     }
 
 }

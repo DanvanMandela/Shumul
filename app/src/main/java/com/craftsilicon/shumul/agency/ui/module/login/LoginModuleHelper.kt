@@ -2,6 +2,7 @@ package com.craftsilicon.shumul.agency.ui.module.login
 
 import android.content.Context
 import com.craftsilicon.shumul.agency.R
+import com.craftsilicon.shumul.agency.data.bean.AppUserState
 import com.craftsilicon.shumul.agency.data.bean.action.ActionTypeEnum
 import com.craftsilicon.shumul.agency.data.bean.app.response.GlobalResponseModule
 import com.craftsilicon.shumul.agency.data.bean.app.route.PayloadRequest
@@ -10,6 +11,7 @@ import com.craftsilicon.shumul.agency.data.security.Util
 import com.craftsilicon.shumul.agency.data.security.getUniqueID
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
+import com.craftsilicon.shumul.agency.ui.util.countryCode
 import com.google.gson.Gson
 import org.json.JSONException
 import org.json.JSONObject
@@ -38,6 +40,12 @@ class LoginModuleResponse(
                         onSuccess = {
                             val user = model.user.convert(it)
                             if (user != null) {
+                                model.preferences.appUserState(
+                                    AppUserState(
+                                        agent = "${user.account.singleOrNull()?.agentID}",
+                                        mobile = "${user.mobile}"
+                                    )
+                                )
                                 model.preferences.userData(user)
                             }
                             if (type == LoginType.Activation)

@@ -96,6 +96,9 @@ fun DepositModule(data: GlobalData) {
     var account by rememberSaveable {
         mutableStateOf("")
     }
+    var narration by rememberSaveable {
+        mutableStateOf("")
+    }
     val accountState = model.preferences.currentAccount.collectAsState().value
 
     var currency by rememberSaveable {
@@ -295,6 +298,30 @@ fun DepositModule(data: GlobalData) {
                                 ), visualTransformation = MoneyVisualTransformation()
                             )
                             Spacer(modifier = Modifier.size(16.dp))
+
+                            OutlinedTextField(
+                                value = narration,
+                                onValueChange = { narration = it },
+                                label = {
+                                    Text(
+                                        text = stringResource(id = R.string.narration_),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontFamily = FontFamily(Font(R.font.montserrat_medium))
+                                    )
+                                }, modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = horizontalModulePadding),
+                                textStyle = TextStyle(
+                                    fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                    fontSize = MaterialTheme.typography.labelLarge.fontSize
+                                ),
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Next,
+                                    keyboardType = KeyboardType.Text
+                                )
+                            )
+                            Spacer(modifier = Modifier.size(16.dp))
                             OutlinedTextField(
                                 value = password,
                                 onValueChange = { password = it },
@@ -354,6 +381,10 @@ fun DepositModule(data: GlobalData) {
                                         } else if (amount.isBlank()) {
                                             snackState.showSnackbar(
                                                 context.getString(R.string.enter_amount_)
+                                            )
+                                        } else if (narration.isBlank()) {
+                                            snackState.showSnackbar(
+                                                context.getString(R.string.enter_narration_)
                                             )
                                         } else if (password.isBlank()) {
                                             snackState.showSnackbar(
@@ -458,7 +489,7 @@ fun DepositModule(data: GlobalData) {
                                 fromAccount = "${agentAccount.value?.account}",
                                 amount = amount,
                                 mobile = "${user?.mobile}",
-                                narration = model.resourceProvider.getString(R.string.cash_deposit_),
+                                narration = narration,
                                 agentId = "${agentAccount.value?.agentID}",
                                 model = model,
                                 pin = password,

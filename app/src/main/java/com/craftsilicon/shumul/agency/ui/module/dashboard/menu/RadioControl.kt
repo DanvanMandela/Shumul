@@ -104,3 +104,43 @@ val cashToCash = mutableListOf(
 )
 
 
+val remittancePay = mutableListOf(
+    MenuItem(
+        title = R.string.agent_,
+        icon = R.drawable.bank_icon,
+        navigate = NavigateTo(
+            route = Module.Remittance.Agent.route,
+            type = NavigateModule(),
+        )
+    ),
+    MenuItem(
+        title = R.string.customer_,
+        icon = R.drawable.bank_note,
+        navigate = NavigateTo(
+            route = Module.Remittance.Customer.route,
+            type = NavigateModule(),
+        )
+    )
+)
+
+
+val dataPurchase = mutableListOf(
+    MenuItem(
+        title = R.string.agent_,
+        icon = R.drawable.bank_icon,
+        navigate = NavigateTo(
+            route = Module.DataPurchase.Agent.route,
+            type = NavigateModule(),
+        )
+    ),
+    MenuItem(
+        title = R.string.customer_,
+        icon = R.drawable.bank_note,
+        navigate = NavigateTo(
+            route = Module.DataPurchase.Customer.route,
+            type = NavigateModule(),
+        )
+    )
+)
+
+

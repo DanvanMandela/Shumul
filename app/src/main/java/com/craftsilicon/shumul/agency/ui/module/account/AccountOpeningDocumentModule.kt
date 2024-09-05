@@ -1,10 +1,8 @@
 package com.craftsilicon.shumul.agency.ui.module.account
 
-import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,7 +49,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -66,15 +63,18 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.canhub.cropper.CropImageContract
 import com.craftsilicon.shumul.agency.R
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.capturedImage
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.compressImage
 import com.craftsilicon.shumul.agency.data.permission.CameraUtil.convert
-import com.craftsilicon.shumul.agency.data.permission.ImageCallback
 import com.craftsilicon.shumul.agency.data.permission.imageOption
 import com.craftsilicon.shumul.agency.data.security.APP.BANK_ID
 import com.craftsilicon.shumul.agency.data.security.APP.country
+import com.craftsilicon.shumul.agency.data.source.model.LocalViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
 import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
@@ -93,6 +93,7 @@ import com.craftsilicon.shumul.agency.ui.util.LoadingModule
 import com.craftsilicon.shumul.agency.ui.util.buttonHeight
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,6 +104,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
     val work = hiltViewModel<WorkViewModel>()
     val owner = LocalLifecycleOwner.current
     val model: RemoteViewModelImpl = hiltViewModel()
+    val local = hiltViewModel<LocalViewModelImpl>()
     val snackState = remember { SnackbarHostState() }
     var screenState: ModuleState by remember {
         mutableStateOf(ModuleState.DISPLAY)
@@ -110,7 +112,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
     val scope = rememberCoroutineScope()
     val user = model.preferences.userData.collectAsState().value
     val accountOpen = model.preferences.accountOpen.collectAsState().value
-    val images = model.preferences.imageHolder.collectAsState().value
+    val images = local.images.collectAsState().value
 
     var moduleCall: ModuleCall by remember {
         mutableStateOf(Response.Confirm)
@@ -119,25 +121,18 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
     val who: MutableState<DocumentDialog> = remember { mutableStateOf(NothingShow) }
 
 
-    val passport: MutableState<Bitmap?> = remember {
-        mutableStateOf(null)
-    }
 
     val passportUri: MutableState<Uri?> = remember {
         mutableStateOf(null)
     }
 
-    val signature: MutableState<Bitmap?> = remember {
-        mutableStateOf(null)
-    }
+
 
     val signatureUri: MutableState<Uri?> = remember {
         mutableStateOf(null)
     }
 
-    val idFront: MutableState<Bitmap?> = remember {
-        mutableStateOf(null)
-    }
+
 
     val idFrontUri: MutableState<Uri?> = rememberSaveable {
         mutableStateOf(null)
@@ -147,9 +142,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
         hashMapOf()
     }
 
-    val idBack: MutableState<Bitmap?> = remember {
-        mutableStateOf(null)
-    }
+
 
     val idBackUri: MutableState<Uri?> = rememberSaveable {
         mutableStateOf(null)
@@ -196,6 +189,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
 
 
 
+
     Box {
         when (screenState) {
             ModuleState.LOADING -> LoadingModule()
@@ -217,25 +211,25 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                 Button(
                                     onClick = {
                                         scope.launch {
-                                            if (passport.value == null) {
+                                            if (passportUri.value == null) {
                                                 snackState.showSnackbar(
                                                     context.getString(
                                                         R.string.tap_to_add_customer_passport_image
                                                     )
                                                 )
-                                            } else if (signature.value == null) {
+                                            } else if (signatureUri.value == null) {
                                                 snackState.showSnackbar(
                                                     context.getString(
                                                         R.string.tap_to_add_signature_
                                                     )
                                                 )
-                                            } else if (idFront.value == null) {
+                                            } else if (idFrontUri.value == null) {
                                                 snackState.showSnackbar(
                                                     context.getString(
                                                         R.string.tap_to_add_id_front_
                                                     )
                                                 )
-                                            } else if (idBack.value == null) {
+                                            } else if (idBackUri.value == null) {
                                                 snackState.showSnackbar(
                                                     context.getString(
                                                         R.string.tap_to_add_id_back_
@@ -397,7 +391,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                 }
                             )
                             Spacer(modifier = Modifier.size(16.dp))
-                            if (passport.value != null)
+                            if (passportUri.value != null)
                                 Text(
                                     text = stringResource(id = R.string.passport_photo),
                                     style = MaterialTheme.typography.labelMedium,
@@ -407,15 +401,10 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                             Card(
                                 onClick = {
                                     model.permission.imageAccess { permission ->
-//                                        if (permission) {
-//                                            sayCheese.value = SayCheese.Selfie
-//                                            launcher.imageOption()
-//                                        }
-                                        data.callback?.onImage(object : ImageCallback {
-                                            override fun image(uri: String) {
-                                                val item = images
-                                            }
-                                        })
+                                        if (permission) {
+                                            sayCheese.value = SayCheese.Selfie
+                                            launcher.imageOption()
+                                        }
                                     }
                                 },
                                 modifier = Modifier
@@ -441,22 +430,25 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                         modifier = Modifier.align(Alignment.Center)
                                     )
                                     passportUri.value?.let {
-                                        passport.value = compressImage(context.capturedImage(it))
-                                        Image(
-                                            bitmap = passport.value!!.asImageBitmap(),
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(context)
+                                                .data(it)
+                                                .dispatcher(Dispatchers.IO)
+                                                .diskCachePolicy(CachePolicy.ENABLED)
+                                                .memoryCachePolicy(CachePolicy.ENABLED)
+                                                .build(),
+                                            contentDescription = "Image Description",
                                             modifier = Modifier
                                                 .padding(4.dp)
                                                 .matchParentSize()
-                                                .clip(RoundedCornerShape(10.dp))
-
+                                                .clip(RoundedCornerShape(10.dp)),
+                                            contentScale = ContentScale.Crop,
                                         )
                                     }
                                 }
                             }
                             Spacer(modifier = Modifier.size(16.dp))
-                            if (signature.value != null)
+                            if (signatureUri.value != null)
                                 Text(
                                     text = stringResource(id = R.string.signature_photo_),
                                     style = MaterialTheme.typography.labelMedium,
@@ -496,22 +488,26 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                     )
 
                                     signatureUri.value?.let {
-                                        signature.value = compressImage(context.capturedImage(it))
-                                        Image(
-                                            bitmap = signature.value!!.asImageBitmap(),
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(context)
+                                                .data(it)
+                                                .dispatcher(Dispatchers.IO)
+                                                .diskCachePolicy(CachePolicy.ENABLED)
+                                                .memoryCachePolicy(CachePolicy.ENABLED)
+                                                .build(),
+                                            contentDescription = "Image Description",
                                             modifier = Modifier
                                                 .padding(4.dp)
                                                 .matchParentSize()
-                                                .clip(RoundedCornerShape(10.dp))
+                                                .clip(RoundedCornerShape(10.dp)),
+                                            contentScale = ContentScale.Crop,
                                         )
                                     }
 
                                 }
                             }
                             Spacer(modifier = Modifier.size(16.dp))
-                            if (idFront.value != null)
+                            if (idFrontUri.value != null)
                                 Text(
                                     text = stringResource(id = R.string.id_front_photo_),
                                     style = MaterialTheme.typography.labelMedium,
@@ -552,22 +548,26 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
 
 
                                     idFrontUri.value?.let {
-                                        idFront.value = compressImage(context.capturedImage(it))
-                                        Image(
-                                            bitmap = idFront.value!!.asImageBitmap(),
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(context)
+                                                .data(it)
+                                                .dispatcher(Dispatchers.IO)
+                                                .diskCachePolicy(CachePolicy.ENABLED)
+                                                .memoryCachePolicy(CachePolicy.ENABLED)
+                                                .build(),
+                                            contentDescription = "Image Description",
                                             modifier = Modifier
                                                 .padding(4.dp)
                                                 .matchParentSize()
-                                                .clip(RoundedCornerShape(10.dp))
+                                                .clip(RoundedCornerShape(10.dp)),
+                                            contentScale = ContentScale.Crop,
                                         )
                                     }
 
                                 }
                             }
                             Spacer(modifier = Modifier.size(16.dp))
-                            if (idBack.value != null)
+                            if (idBackUri.value != null)
                                 Text(
                                     text = stringResource(id = R.string.id_back_photo_),
                                     style = MaterialTheme.typography.labelMedium,
@@ -607,15 +607,19 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                     )
 
                                     idBackUri.value?.let {
-                                        idBack.value = compressImage(context.capturedImage(it))
-                                        Image(
-                                            bitmap = idBack.value!!.asImageBitmap(),
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(context)
+                                                .data(it)
+                                                .dispatcher(Dispatchers.IO)
+                                                .diskCachePolicy(CachePolicy.ENABLED)
+                                                .memoryCachePolicy(CachePolicy.ENABLED)
+                                                .build(),
+                                            contentDescription = "Image Description",
                                             modifier = Modifier
                                                 .padding(4.dp)
                                                 .matchParentSize()
-                                                .clip(RoundedCornerShape(10.dp))
+                                                .clip(RoundedCornerShape(10.dp)),
+                                            contentScale = ContentScale.Crop,
                                         )
                                     }
 
@@ -667,7 +671,7 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
 
             NothingShow -> {}
             ResponseDialog -> when (val s = moduleCall) {
-                Response.Confirm -> AccountOpeningDialog(selfie = passport.value!!,
+                Response.Confirm -> AccountOpeningDialog(selfie = passportUri.value!!,
                     user = accountOpen, close = { who.value = NothingShow },
                     action = {
                         who.value = NothingShow
@@ -716,19 +720,41 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                             )
                                             val partData = hashMapOf(
                                                 "idFront" to partBase64(
-                                                    base64Image = convert(idFront.value!!),
+                                                    base64Image = convert(
+                                                        compressImage(
+                                                            context.capturedImage(idFrontUri.value!!)
+                                                        )!!
+                                                    ),
                                                     name = "IdFront"
                                                 ),
                                                 "passport" to partBase64(
-                                                    base64Image = convert(passport.value!!),
+                                                    base64Image = convert(
+                                                        compressImage(
+                                                            context.capturedImage(
+                                                                passportUri.value!!
+                                                            )
+                                                        )!!
+                                                    ),
                                                     name = "photo"
                                                 ),
                                                 "idBack" to partBase64(
-                                                    base64Image = convert(idBack.value!!),
+                                                    base64Image = convert(
+                                                        compressImage(
+                                                            context.capturedImage(
+                                                                idBackUri.value!!
+                                                            )
+                                                        )!!
+                                                    ),
                                                     name = "IdBack"
                                                 ),
                                                 "signature" to partBase64(
-                                                    base64Image = convert(signature.value!!),
+                                                    base64Image = convert(
+                                                        compressImage(
+                                                            context.capturedImage(
+                                                                signatureUri.value!!
+                                                            )
+                                                        )!!
+                                                    ),
                                                     name = "signature"
                                                 )
                                             )

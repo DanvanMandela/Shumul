@@ -35,11 +35,13 @@ sealed class Module(open val route: String, open val name: String = String()) {
         override val route: String = "dataPurchase",
         override val name: String = route
     ) : Module(route) {
-        data object Validate : DataPurchase(route = "validate")
-        data object Subscribe : DataPurchase(
-            route = "subscribe?key={key}",
-            name = "subscribe"
-        )
+        //        data object Validate : DataPurchase(route = "validate")
+//        data object Subscribe : DataPurchase(
+//            route = "subscribe?key={key}",
+//            name = "subscribe"
+//        )
+        data object Agent : DataPurchase(route = "agentDataPurchase")
+        data object Customer : DataPurchase(route = "customerDataPurchase")
     }
 
     data object FundTransferModule : Module(route = "fundTransfer")
@@ -56,6 +58,12 @@ sealed class Module(open val route: String, open val name: String = String()) {
         data object Agent : Module(route = "agentRemittance")
         data object Customer : Module(route = "customerRemittance")
     }
+
+    open class PayRemittance : Module(route = "paRemittance") {
+        data object Agent : Module(route = "agentRemittance")
+        data object Customer : Module(route = "customerRemittance")
+    }
+
 
     open class AccountStatement(override val route: String = "statement") : Module(route) {
         data object Mini : AccountStatement(route = "mini")

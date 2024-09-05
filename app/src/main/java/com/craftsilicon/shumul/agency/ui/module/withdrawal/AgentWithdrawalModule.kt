@@ -67,6 +67,7 @@ import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
 import com.craftsilicon.shumul.agency.ui.module.validation.ValidationModuleResponse
+import com.craftsilicon.shumul.agency.ui.module.withdrawal.WithdrawalModuleHelper.otpTransactionAgent
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
@@ -329,7 +330,7 @@ fun AgentWithdrawalModule(function: () -> Unit) {
                                             action = {
                                                 model.web(
                                                     path = "${model.deviceData?.agent}",
-                                                    data = otpTransactionFunc(
+                                                    data = otpTransactionAgent(
                                                         toAccount = account,
                                                         fromAccount = "${agentAccount.value?.account}",
                                                         amount = amount,

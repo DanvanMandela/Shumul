@@ -14,12 +14,66 @@ import com.google.gson.Gson
 import org.json.JSONException
 import org.json.JSONObject
 
+
+object ValidationHelper {
+
+    fun validateHash(
+        response: HashMap<String, Any?>,
+        model: RemoteViewModelImpl,
+        onError: (message: String?) -> Unit,
+        onSuccess: (data: HashMap<String, Any?>) -> Unit,
+        onToken: () -> Unit
+    ) {
+        try {
+            AppLogger.instance.appLog("VALIDATION:RESPONSE:ENCRYPTED", Gson().toJson(response))
+            if (response.containsKey("Response")) {
+                val global = model.globalResponseConverter
+                    .convert(model.any.convert(response))
+                if (global != null)
+                    GlobalResponseModule(
+                        response = global,
+                        storage = model.preferences,
+                        security = model.restApiSecurity,
+                        serializer = model.globalDataConverter,
+                        onError = onError,
+                        onSuccess = {
+                            val validation = model.validation.toHash(it)
+                            if (validation != null) {
+                                onSuccess(validation.data)
+                            } else onError(
+                                "${
+                                    response["message"] ?: model.resourceProvider
+                                        .getString(R.string.something_went_wrong)
+                                }"
+                            )
+                        }, onToken = onToken
+                    )
+                else onError(
+                    "${
+                        response["message"] ?: model.resourceProvider
+                            .getString(R.string.something_went_wrong)
+                    }"
+                )
+            } else onError(
+                "${
+                    response["message"] ?: model.resourceProvider
+                        .getString(R.string.something_went_wrong)
+                }"
+            )
+        } catch (e: Exception) {
+            onError(e.message)
+            e.printStackTrace()
+        }
+    }
+
+}
+
 class ValidationModuleResponse(
     response: HashMap<String, Any?>,
     val model: RemoteViewModelImpl,
     onError: (message: String?) -> Unit,
     onSuccess: (data: ValidationBean?) -> Unit,
-    onToken:()->Unit
+    onToken: () -> Unit
 ) {
     init {
         try {
@@ -77,7 +131,7 @@ fun validationFunc(
         val iv = model.deviceData!!.run
         val device = model.deviceData!!.device
         val uniqueID = getUniqueID()
-        val unique=model.preferences.uniqueID.value
+        val unique = model.preferences.uniqueID.value
         val map = APP.data(
             context = context,
             storage = model.preferences,
@@ -102,4 +156,6 @@ fun validationFunc(
         ex.printStackTrace()
         null
     }
+
+
 }

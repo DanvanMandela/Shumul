@@ -192,4 +192,11 @@
     <string name="to_mobile_">To Mobile</string>
     <string name="send_remittance_">Send Remittance</string>
     <string name="enter_last_name_">Enter last name</string>
+    <string name="total_amount_">Total Fee</string>
+    <string name="fee_amount_">Fee Amount</string>
+    <string name="due_amount_">Due Amount</string>
+    <string name="enter_valid_name_">Enter valid name</string>
+    <string name="pay_remittance_">Pay Remittance</string>
+    <string name="remittance_number_">Remittance Number</string>
+    <string name="currency_miss_match_">Account currency not matching</string>
 </resources>

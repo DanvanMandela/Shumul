@@ -29,6 +29,8 @@ import dagger.assisted.AssistedInject
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 
 @HiltWorker
 class RouteDataWorker @AssistedInject constructor(
@@ -95,17 +97,23 @@ class RouteDataWorker @AssistedInject constructor(
                                 encryptionIv = iv
                             )
                         )
-                        routes?.token = "${data.token}"
-                        routes?.run = iv
-                        routes?.device = kv
-                        storage.setDeviceData(routes!!)
-                        AppLogger.instance.appLog("Routes:Response:", Gson().toJson(routes))
-                        constructResponse(
-                            Result.success(
-                                Data.Builder().putBoolean(WorkerCommons.IS_WORK_DONE, true)
-                                    .build()
+                        runBlocking {
+                            storage.token("")
+                            delay(200)
+                            val token = data.token
+                            storage.token(data.token!!)
+                            routes?.token = token!!
+                            routes?.run = iv
+                            routes?.device = kv
+                            storage.setDeviceData(routes!!)
+                            AppLogger.instance.appLog("Routes:Response:", Gson().toJson(routes))
+                            constructResponse(
+                                Result.success(
+                                    Data.Builder().putBoolean(WorkerCommons.IS_WORK_DONE, true)
+                                        .build()
+                                )
                             )
-                        )
+                        }
                     } else constructResponse(Result.retry())
 
                 } else constructResponse(Result.retry())

@@ -1,5 +1,6 @@
 package com.craftsilicon.shumul.agency.ui.custom
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -69,7 +70,6 @@ fun EditDropDown(
     val dataStateMutex = Mutex()
 
 
-
     if (dataState.isNotEmpty())
         LaunchedEffect(key1 = Unit) {
             delay(200L)
@@ -94,6 +94,7 @@ fun EditDropDown(
 
             }
         }
+    else option = String()
 
 
     val items = List(10) { it.toString() }
@@ -207,15 +208,12 @@ fun EditDropDown(
 }
 
 
-
-
 data class DropDownResult(
     val key: Any? = String(),
     val desc: String? = String(),
     val extra: Any? = String(),
     var display: Boolean = false
 )
-
 
 
 @Composable

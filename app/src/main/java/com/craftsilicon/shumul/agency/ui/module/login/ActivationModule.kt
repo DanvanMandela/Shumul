@@ -51,8 +51,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.craftsilicon.shumul.agency.R
+import com.craftsilicon.shumul.agency.data.bean.AppUserState
 import com.craftsilicon.shumul.agency.data.security.APP
 import com.craftsilicon.shumul.agency.data.security.ActivationData
+import com.craftsilicon.shumul.agency.data.source.model.LocalViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
 import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
@@ -77,6 +79,7 @@ fun ActivationModule(data: GlobalData) {
     val work = hiltViewModel<WorkViewModel>()
     val owner = LocalLifecycleOwner.current
     val model: RemoteViewModelImpl = hiltViewModel()
+    val local: LocalViewModelImpl = hiltViewModel()
     val snackState = remember { SnackbarHostState() }
     var passwordVisibility by remember { mutableStateOf(false) }
     var mobile by rememberSaveable {
@@ -309,6 +312,12 @@ fun ActivationModule(data: GlobalData) {
                                                         },
                                                         onSuccess = { message ->
                                                             scope.launch {
+                                                                local.preferences.appUserState(
+                                                                    AppUserState(
+                                                                        agent = username,
+                                                                        mobile = "${countryCode()}$mobile"
+                                                                    )
+                                                                )
                                                                 context.toast(message)
                                                                 delay(600)
                                                                 data.controller.navigate(Module.Dashboard.route)
@@ -353,7 +362,7 @@ fun ActivationModule(data: GlobalData) {
 
             }
 
-            ModuleState.SUCCESS -> AppLogger.instance.appLog("Activation","Hello")
+            ModuleState.SUCCESS -> AppLogger.instance.appLog("Activation", "Hello")
         }
 
         SnackbarHost(

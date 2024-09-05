@@ -103,4 +103,11 @@ class AnyConverter @Inject constructor(private val gson: Gson) {
         } ?: hashMapOf()
     }
 
+    fun mapPrimitive(data: String?): HashMap<String, String?> {
+        val type = object : TypeToken<HashMap<String, String?>>() {}.type
+        return data?.let {
+            gson.fromJson(it, type)
+        } ?: hashMapOf()
+    }
+
 }

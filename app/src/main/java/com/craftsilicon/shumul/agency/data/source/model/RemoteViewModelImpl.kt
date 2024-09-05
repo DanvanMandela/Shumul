@@ -3,8 +3,10 @@ package com.craftsilicon.shumul.agency.data.source.model
 import retrofit2.HttpException
 import androidx.lifecycle.ViewModel
 import com.craftsilicon.shumul.agency.data.bean.BalanceBeanTypeConverter
+import com.craftsilicon.shumul.agency.data.bean.CurrencyBeanTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.MiniDataTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.ProductBeanTypeConverter
+import com.craftsilicon.shumul.agency.data.bean.StaticDataResponseTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.UserDataTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.ValidationResponseTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.WorkSectorBeanTypeConverter
@@ -21,6 +23,7 @@ import com.craftsilicon.shumul.agency.data.security.encry.RestApiSecurity
 import com.craftsilicon.shumul.agency.data.source.repo.remote.RemoteRepository
 import com.craftsilicon.shumul.agency.data.source.storage.pref.StorageDataSource
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
+import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -43,11 +46,14 @@ class RemoteViewModelImpl @Inject constructor(
     val mini: MiniDataTypeConverter,
     val permission: AppPermission,
     val product: ProductBeanTypeConverter,
-    val sector: WorkSectorBeanTypeConverter
+    val currency: CurrencyBeanTypeConverter,
+    val sector: WorkSectorBeanTypeConverter,
+    val static: StaticDataResponseTypeConverter
 ) : ViewModel(), RemoteViewModel {
 
     override val deviceData: DeviceData?
         get() = preferences.deviceData.value
+    override val token: String? = preferences.token.value
 
     override fun web(
         path: String,
@@ -56,9 +62,10 @@ class RemoteViewModelImpl @Inject constructor(
         onResponse: (response: HashMap<String, Any?>) -> Unit
     ) {
         val dispose = CompositeDisposable()
+        val token = "${preferences.token.value}"
         dispose.add(repo.web(
             path = path,
-            token = "${deviceData?.token}",
+            token = token,
             data = data
         ).doOnSubscribe { state(ModuleState.LOADING) }
             .doOnError { state(ModuleState.ERROR) }
@@ -128,4 +135,6 @@ interface RemoteViewModel {
     )
 
     val deviceData: DeviceData?
+
+    val token: String?
 }

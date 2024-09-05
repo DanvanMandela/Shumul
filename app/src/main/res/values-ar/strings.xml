@@ -193,5 +193,13 @@
     <string name="from_mobile_">من الجوال</string>
     <string name="to_mobile_">إلى الجوال</string>
     <string name="send_remittance_">إرسال الحوالة</string>
+    <string name="enter_last_name_">أدخل الاسم الأخير</string>
+    <string name="fee_amount_">مبلغ الرسوم</string>
+    <string name="due_amount_">المبلغ المستحق</string>
+    <string name="total_amount_">الرسوم الإجمالية</string>
+    <string name="enter_valid_name_">أدخل اسمًا صحيحًا</string>
+    <string name="pay_remittance_">دفع الحوالة</string>
+    <string name="remittance_number_">رقم الحوالة</string>
+    <string name="currency_miss_match_">العملة في الحساب لا تتطابق</string>
 
 </resources>

@@ -22,6 +22,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.craftsilicon.shumul.agency.R
+import com.google.gson.internal.LinkedTreeMap
+import java.util.Locale
 
 @Composable
 fun SuccessDialog(
@@ -70,10 +72,12 @@ fun SuccessDialog(
                         .padding(horizontal = 4.dp)
                         .fillMaxWidth()
                 )
-                if(!reference.isNullOrBlank()) {
+                if (!reference.isNullOrBlank()) {
+                    val scientificNumber = reference.toDouble()
+                    val plainString = scientificNumber.toBigDecimal().toPlainString()
                     Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
                     Text(
-                        text = reference,
+                        text = plainString,
                         fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
                         style = MaterialTheme.typography.titleSmall,
                         textAlign = TextAlign.Center,
@@ -105,4 +109,17 @@ fun SuccessDialog(
             }
         }
     }
+}
+
+fun String.toBigNumberDisplay(): String {
+    val scientificNumber = this.toDouble()
+    return scientificNumber.toBigDecimal().toBigInteger().toString()
+}
+
+fun LinkedTreeMap<*, *>.toHashMap(): HashMap<String, Any?> {
+    val hashMap = HashMap<String, Any?>()
+    for ((key, value) in this) {
+        hashMap[key.toString()] = value
+    }
+    return hashMap
 }

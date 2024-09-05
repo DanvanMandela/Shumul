@@ -26,6 +26,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,8 +54,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.craftsilicon.shumul.agency.R
+import com.craftsilicon.shumul.agency.data.bean.staticDataResponse
 import com.craftsilicon.shumul.agency.data.security.APP
 import com.craftsilicon.shumul.agency.data.security.ActivationData
+import com.craftsilicon.shumul.agency.data.source.model.LocalViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
 import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
@@ -63,7 +66,6 @@ import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
 import com.craftsilicon.shumul.agency.ui.module.dashboard.balance.BalanceModuleResponse
-import com.craftsilicon.shumul.agency.ui.module.dashboard.balance.balanceFunc
 import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.navigation.NavigateDialog
@@ -88,27 +90,37 @@ fun AirtimeModule(data: GlobalData) {
     val snackState = remember { SnackbarHostState() }
 
     var screenState: ModuleState by remember {
-        mutableStateOf(ModuleState.DISPLAY)
+        mutableStateOf(ModuleState.LOADING)
     }
+    val local = hiltViewModel<LocalViewModelImpl>()
 
     val scope = rememberCoroutineScope()
 
-    val sourceAccount = remember { SnapshotStateList<DropDownResult>() }
+    var account by rememberSaveable {
+        mutableStateOf("")
+    }
 
-    var mno: HashMap<String, Any?> = remember {
-        hashMapOf()
+    var mno by rememberSaveable {
+        mutableStateOf("")
     }
-    var account: HashMap<String, Any?> = remember {
-        hashMapOf()
-    }
+
     var mobile by rememberSaveable {
         mutableStateOf("")
     }
     var amount by rememberSaveable {
         mutableStateOf("")
     }
+
+    val staticData = local.staticData.collectAsState().value
+
+    val appUser by remember {
+        mutableStateOf(model.preferences.appUserState.value)
+    }
+
     val user = model.preferences.userData.collectAsState().value
     val mnoData = remember { SnapshotStateList<DropDownResult>() }
+
+    val agentAccounts = remember { SnapshotStateList<DropDownResult>() }
 
 
     var navType: NavigationType? by remember {
@@ -124,6 +136,86 @@ fun AirtimeModule(data: GlobalData) {
         mutableStateOf(if (APP.ACTIVATED) ActivationData.AGENT_PIN else "")
     }
     var action: () -> Unit = {}
+
+    LaunchedEffect(key1 = Unit) {
+        user?.account?.forEach {
+            agentAccounts.add(
+                DropDownResult(
+                    key = it.account,
+                    desc = it.account
+                )
+            )
+        }
+    }
+
+    LaunchedEffect(staticData) {
+        staticData.forEach {
+            mnoData.add(
+                DropDownResult(
+                    key = it.id,
+                    desc = it.description
+                )
+            )
+        }
+
+    }
+
+    if (staticData.isEmpty())
+        LaunchedEffect(key1 = Unit) {
+            delay(600)
+            action = {
+                model.web(
+                    path = "${model.deviceData?.agent}",
+                    data = mnoData(
+                        account = "${user?.account?.singleOrNull()?.account}",
+                        mobile = "${appUser?.mobile}",
+                        agentId = "${appUser?.agent}",
+                        model = model,
+                        context = context
+                    )!!,
+                    state = { screenState = it },
+                    onResponse = { response ->
+                        staticDataResponse(
+                            response = response,
+                            model = model,
+                            onError = { error ->
+                                screenState = ModuleState.ERROR
+                                scope.launch {
+                                    snackState.showSnackbar(
+                                        message = "$error"
+                                    )
+                                }
+                            },
+                            onSuccess = { beans ->
+                                scope.launch {
+                                    local.staticData.value = beans
+                                    screenState = ModuleState.DISPLAY
+                                    delay(200)
+                                }
+                            }, onToken = {
+                                work.routeData(owner, object :
+                                    WorkStatus {
+                                    override fun workDone(b: Boolean) {
+                                        if (b) action.invoke()
+                                    }
+
+                                    override fun progress(p: Int) {
+                                        AppLogger.instance.appLog(
+                                            "DATA:Progress",
+                                            "$p"
+                                        )
+                                    }
+                                })
+                            }
+                        )
+                    }
+                )
+            }
+            action.invoke()
+        }
+
+
+
 
     Box {
 
@@ -180,10 +272,7 @@ fun AirtimeModule(data: GlobalData) {
                                     label = stringResource(id = R.string.mno_),
                                     data = MutableStateFlow(mnoData)
                                 ) { result ->
-                                    mno = hashMapOf(
-                                        "mno" to result.desc,
-                                        "id" to result.key
-                                    )
+                                    mno = result.key as String
                                 }
                             }
                             Spacer(modifier = Modifier.size(16.dp))
@@ -194,12 +283,9 @@ fun AirtimeModule(data: GlobalData) {
                             ) {
                                 EditDropDown(
                                     label = stringResource(id = R.string.service_account_),
-                                    data = MutableStateFlow(sourceAccount)
+                                    data = MutableStateFlow(agentAccounts)
                                 ) { result ->
-                                    account = hashMapOf(
-                                        "account" to result.desc,
-                                        "id" to result.key
-                                    )
+                                    account = result.key as String
                                 }
                             }
                             Spacer(modifier = Modifier.size(16.dp))
@@ -315,7 +401,7 @@ fun AirtimeModule(data: GlobalData) {
                                             snackState.showSnackbar(
                                                 context.getString(R.string.select_service_provider_)
                                             )
-                                        } else if (account.isEmpty()) {
+                                        } else if (account.isBlank()) {
                                             snackState.showSnackbar(
                                                 context.getString(R.string.enter_account_number)
                                             )
@@ -335,11 +421,11 @@ fun AirtimeModule(data: GlobalData) {
                                             action = {
                                                 model.web(
                                                     path = "${model.deviceData?.agent}",
-                                                    data = balanceFunc(
-                                                        account = "${account["account"]}",
-                                                        fromAccount = "${user?.account?.firstOrNull()?.account}",
-                                                        mobile = "${user?.mobile}",
-                                                        agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                                    data = airtimeValidate(
+                                                        account = "${user?.account?.singleOrNull()?.account}",
+                                                        mno = mno,
+                                                        mobile = "${appUser?.mobile}",
+                                                        agentId = "${appUser?.agent}",
                                                         model = model,
                                                         context = context,
                                                         pin = password

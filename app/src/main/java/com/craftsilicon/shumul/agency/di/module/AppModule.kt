@@ -46,8 +46,6 @@ abstract class AppModule {
     abstract fun provideCryptography(crypt: Cryptography): Crypt
 
 
-
-
     @Binds
     abstract fun provideRSA(rsa: RSAServiceImpl): RSAService
 
@@ -65,8 +63,6 @@ abstract class AppModule {
 
     @Binds
     abstract fun provideInteraction(userInteractionWatcher: UserInteractionWatcher): InteractionDataSource
-
-
 
 
 }

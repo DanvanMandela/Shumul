@@ -3,6 +3,7 @@ package com.craftsilicon.shumul.agency.data.source.storage.pref
 import android.content.SharedPreferences
 import com.craftsilicon.shumul.agency.data.bean.Account
 import com.craftsilicon.shumul.agency.data.bean.AccountOpening
+import com.craftsilicon.shumul.agency.data.bean.AppUserState
 import com.craftsilicon.shumul.agency.data.bean.ImageHolder
 import com.craftsilicon.shumul.agency.data.bean.UserData
 import com.craftsilicon.shumul.agency.data.bean.device.DeviceData
@@ -14,6 +15,9 @@ interface StorageDataSource {
 
     fun userData(value: UserData)
     val userData: StateFlow<UserData?>
+
+    fun appUserState(value: AppUserState)
+    val appUserState: StateFlow<AppUserState?>
 
     fun currentAccount(value: Account)
     val currentAccount: StateFlow<Account?>
@@ -47,6 +51,9 @@ interface StorageDataSource {
     fun imageHolder(value: ImageHolder)
     fun imageHolder()
     val imageHolder: StateFlow<ImageHolder?>
+
+    fun token(value: String)
+    val token: StateFlow<String?>
 
 }
 

@@ -252,13 +252,6 @@ fun CustomerWithdrawalModule(function: () -> Unit) {
                                 fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
                                 fontSize = MaterialTheme.typography.labelLarge.fontSize
                             ),
-                            suffix = {
-                                Text(
-                                    text = stringResource(id = R.string.currency_symbol_),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold))
-                                )
-                            },
                             keyboardOptions = KeyboardOptions(
                                 imeAction = ImeAction.Next,
                                 keyboardType = KeyboardType.Phone

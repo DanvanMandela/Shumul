@@ -157,22 +157,22 @@ val customerMenus = mutableListOf(
             type = NavigateModule(),
         )
     ),
-    MenuItem(
-        title = R.string.account_to_cash_,
-        icon = R.drawable.account_to_cash,
-        navigate = NavigateTo(
-            route = Module.AccountToCash().route,
-            type = NavigateModule(),
-        )
-    ),
-    MenuItem(
-        title = R.string.cash_to_cash_,
-        icon = R.drawable.cash_to_cash,
-        navigate = NavigateTo(
-            route = Module.CashToCash().route,
-            type = NavigateModule(),
-        )
-    ),
+//    MenuItem(
+//        title = R.string.account_to_cash_,
+//        icon = R.drawable.account_to_cash,
+//        navigate = NavigateTo(
+//            route = Module.AccountToCash().route,
+//            type = NavigateModule(),
+//        )
+//    ),
+//    MenuItem(
+//        title = R.string.cash_to_cash_,
+//        icon = R.drawable.cash_to_cash,
+//        navigate = NavigateTo(
+//            route = Module.CashToCash().route,
+//            type = NavigateModule(),
+//        )
+//    ),
     MenuItem(
         title = R.string.airtime_,
         icon = R.drawable.airtime,
@@ -185,7 +185,7 @@ val customerMenus = mutableListOf(
         title = R.string.data_purchase_,
         icon = R.drawable.airtime,
         navigate = NavigateTo(
-            route = Module.DataPurchase.Validate.route,
+            route = Module.DataPurchase().route,
             type = NavigateModule(),
         )
     ),
@@ -194,6 +194,14 @@ val customerMenus = mutableListOf(
         icon = R.drawable.remittance,
         navigate = NavigateTo(
             route = Module.Remittance().route,
+            type = NavigateModule(),
+        )
+    ),
+    MenuItem(
+        title = R.string.pay_remittance_,
+        icon = R.drawable.remittance,
+        navigate = NavigateTo(
+            route = Module.PayRemittance().route,
             type = NavigateModule(),
         )
     )

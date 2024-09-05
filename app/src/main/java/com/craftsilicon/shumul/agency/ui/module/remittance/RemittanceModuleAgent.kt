@@ -1,5 +1,6 @@
 package com.craftsilicon.shumul.agency.ui.module.remittance
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -54,7 +57,6 @@ import com.craftsilicon.shumul.agency.R
 import com.craftsilicon.shumul.agency.data.bean.Account
 import com.craftsilicon.shumul.agency.data.bean.ValidationBean
 import com.craftsilicon.shumul.agency.data.security.APP
-import com.craftsilicon.shumul.agency.data.security.APP.TEST
 import com.craftsilicon.shumul.agency.data.security.ActivationData
 import com.craftsilicon.shumul.agency.data.source.model.LocalViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
@@ -63,15 +65,12 @@ import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
+import com.craftsilicon.shumul.agency.ui.module.ConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
-import com.craftsilicon.shumul.agency.ui.module.account.AccountOpeningModuleProductResponse
-import com.craftsilicon.shumul.agency.ui.module.account.productFunc
-import com.craftsilicon.shumul.agency.ui.module.cash.account.AccountToCashHelper
-import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
-import com.craftsilicon.shumul.agency.ui.module.validation.ValidationModuleResponse
+import com.craftsilicon.shumul.agency.ui.module.validation.ValidationHelper
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
@@ -91,19 +90,21 @@ fun RemittanceModuleAgent(function: () -> Unit) {
     val model: RemoteViewModelImpl = hiltViewModel()
     val snackState = remember { SnackbarHostState() }
     var screenState: ModuleState by remember {
-        mutableStateOf(ModuleState.DISPLAY)
+        mutableStateOf(ModuleState.LOADING)
     }
     val local = hiltViewModel<LocalViewModelImpl>()
     val user = model.preferences.userData.collectAsState().value
     val scope = rememberCoroutineScope()
-    var account by rememberSaveable {
+    val currenciesData = local.currency.collectAsState().value
+
+    var narration by rememberSaveable {
         mutableStateOf("")
     }
 
     val accountState = model.preferences.currentAccount.collectAsState().value
     val agentAccounts = remember { SnapshotStateList<DropDownResult>() }
     val agentAccount: MutableState<Account?> = remember {
-        mutableStateOf(accountState)
+        mutableStateOf(null)
     }
 
     val currencyData = remember {
@@ -115,12 +116,19 @@ fun RemittanceModuleAgent(function: () -> Unit) {
     }
 
 
+    var currencyId by rememberSaveable {
+        mutableStateOf("")
+    }
     var currency by rememberSaveable {
-        mutableStateOf(user?.account?.first()?.currency)
+        mutableStateOf("")
     }
 
 
     var receiverName by rememberSaveable {
+        mutableStateOf("")
+    }
+
+    var senderName by rememberSaveable {
         mutableStateOf("")
     }
 
@@ -129,6 +137,10 @@ fun RemittanceModuleAgent(function: () -> Unit) {
     }
 
     var amount by rememberSaveable {
+        mutableStateOf("")
+    }
+
+    var totalAmount by rememberSaveable {
         mutableStateOf("")
     }
 
@@ -174,9 +186,9 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                                     )
                                 }
                             },
-                            onSuccess = { products ->
+                            onSuccess = { beans ->
                                 scope.launch {
-                                    local.products.value = products
+                                    local.currency.value = beans
                                     screenState = ModuleState.DISPLAY
                                     delay(200)
                                 }
@@ -203,8 +215,28 @@ fun RemittanceModuleAgent(function: () -> Unit) {
         }
 
 
-    LaunchedEffect(key1 = Unit) {
-        user?.account?.forEach {
+
+
+    if (currenciesData.isNotEmpty())
+        LaunchedEffect(key1 = Unit) {
+            currenciesData.forEach {
+                currencyData.apply {
+                    removeIf { p -> p.key == it.id }
+                    add(
+                        DropDownResult(
+                            key = it.id,
+                            desc = it.description,
+                            display = it.id == "YER"
+                        )
+                    )
+                }
+            }
+
+        }
+
+    LaunchedEffect(key1 = currency) {
+        agentAccounts.clear()
+        user?.account?.filter { it.currency == currency }?.forEach {
             agentAccounts.add(
                 DropDownResult(
                     key = it,
@@ -230,10 +262,24 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                     Column(
                         modifier = Modifier
                             .background(MaterialTheme.colorScheme.background)
-                            .fillMaxSize(),
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-
+                        Spacer(modifier = Modifier.size(16.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = horizontalModulePadding)
+                        ) {
+                            EditDropDown(
+                                label = stringResource(id = R.string.currency_),
+                                data = MutableStateFlow(currencyData)
+                            ) { result ->
+                                currencyId = result.key as String
+                                currency = result.desc!!
+                            }
+                        }
                         Spacer(modifier = Modifier.size(16.dp))
                         Box(
                             modifier = Modifier
@@ -245,24 +291,32 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                                 data = MutableStateFlow(agentAccounts)
                             ) { result ->
                                 agentAccount.value = result.key as Account
-                                agentAccount.value?.currency?.let {
-                                    currency = it
-                                }
                             }
                         }
                         Spacer(modifier = Modifier.size(16.dp))
-                        Box(
-                            modifier = Modifier
+                        OutlinedTextField(
+                            value = senderName,
+                            onValueChange = { senderName = it },
+                            label = {
+                                Text(
+                                    text = stringResource(id = R.string.sender_name_),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
+                                )
+                            }, modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = horizontalModulePadding)
-                        ) {
-                            EditDropDown(
-                                label = stringResource(id = R.string.currency_),
-                                data = MutableStateFlow(currencyData)
-                            ) { result ->
-                                currency = result.key as String
-                            }
-                        }
+                                .padding(horizontal = horizontalModulePadding),
+                            textStyle = TextStyle(
+                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                fontSize = MaterialTheme.typography.labelLarge.fontSize
+                            ),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Text
+                            )
+                        )
+
                         Spacer(modifier = Modifier.size(16.dp))
                         OutlinedTextField(
                             value = receiverName,
@@ -348,6 +402,29 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                         )
                         Spacer(modifier = Modifier.size(16.dp))
                         OutlinedTextField(
+                            value = narration,
+                            onValueChange = { narration = it },
+                            label = {
+                                Text(
+                                    text = stringResource(id = R.string.narration_),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
+                                )
+                            }, modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = horizontalModulePadding),
+                            textStyle = TextStyle(
+                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                fontSize = MaterialTheme.typography.labelLarge.fontSize
+                            ),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Text
+                            )
+                        )
+                        Spacer(modifier = Modifier.size(16.dp))
+                        OutlinedTextField(
                             value = password,
                             onValueChange = { password = it },
                             label = {
@@ -411,6 +488,10 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_receiver_mobile_)
                                         )
+                                    } else if (narration.isBlank()) {
+                                        snackState.showSnackbar(
+                                            context.getString(R.string.enter_narration_)
+                                        )
                                     } else if (password.isBlank()) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_pin_)
@@ -426,11 +507,11 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                                                     mobile = receiverMobile,
                                                     context = context,
                                                     model = model,
-                                                    currency = "$currency"
+                                                    currency = "$currencyId"
                                                 )!!,
                                                 state = { screenState = it },
                                                 onResponse = { response ->
-                                                    ValidationModuleResponse(
+                                                    ValidationHelper.validateHash(
                                                         response = response,
                                                         model = model,
                                                         onError = { error ->
@@ -444,15 +525,42 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                                                         onSuccess = { validation ->
                                                             screenState = ModuleState.DISPLAY
                                                             moduleCall = Response.Confirm
-                                                            validation?.holderAmount = amount
-                                                            validation?.account = receiverMobile
-                                                            validation?.extra = hashMapOf(
-                                                                "fromName" to "",
-                                                                "fromAccount" to account
-                                                            )
-                                                            validation?.clientName = receiverName
-                                                            validation?.currency = currency
-                                                            validationData.value = validation
+                                                            totalAmount = hashMapOf(
+                                                                "A" to validation["agentFee"],
+                                                                "B" to validation["networkFee"],
+                                                                "C" to validation["destFee"],
+                                                                "D" to amount
+                                                            ).sumOf()
+                                                            validationData.value =
+                                                                ValidationBean().apply {
+                                                                    isOtp = false
+                                                                    display = linkedMapOf(
+                                                                        context.getString(R.string.from_account_)
+                                                                                to agentAccount.value?.account,
+                                                                        context.getString(R.string.sender_name_)
+                                                                                to senderName,
+                                                                        context.getString(R.string.sender_mobile_)
+                                                                                to "${user?.mobile}",
+                                                                        context.getString(R.string.receiver_name_)
+                                                                                to receiverName,
+                                                                        context.getString(R.string.receiver_mobile_)
+                                                                                to "${countryCode()}$receiverMobile",
+                                                                        context.getString(R.string.currency_)
+                                                                                to currency,
+                                                                        context.getString(R.string.fee_amount_)
+                                                                                to hashMapOf(
+                                                                            "A" to validation["agentFee"],
+                                                                            "B" to validation["networkFee"],
+                                                                            "C" to validation["destFee"]
+                                                                        ).sumOf(),
+                                                                        context.getString(R.string.amount_)
+                                                                                to amount,
+                                                                        context.getString(R.string.total_amount_)
+                                                                                to totalAmount,
+                                                                    )
+                                                                    extra = validation
+                                                                    this.amount = totalAmount
+                                                                }
                                                             showDialog = true
                                                         }, onToken = {
                                                             work.routeData(owner, object :
@@ -489,6 +597,7 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                                 style = MaterialTheme.typography.bodyLarge,
                             )
                         }
+                        Spacer(modifier = Modifier.size(horizontalModulePadding))
 
                     }
                 }
@@ -508,6 +617,8 @@ fun RemittanceModuleAgent(function: () -> Unit) {
             )
         }
 
+
+
         if (showDialog) when (val s = moduleCall) {
             is Response.Success -> SuccessDialog(
                 message = "${s.data["message"]}",
@@ -517,24 +628,37 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                     function()
                 })
 
-            is Response.Confirm -> FundTransferConfirmDialog(
+            is Response.Confirm -> ConfirmDialog(
                 data = validationData.value!!,
-                action = { otp ->
+                action = {
                     showDialog = false
                     action = {
                         model.web(
                             path = "${model.deviceData?.agent}",
-                            data = AccountToCashHelper.post(
-                                account = account,
-                                branch = "${validationData.value?.branch}",
-                                amount = amount,
+                            data = RemittanceModuleHelper.remittanceAgent(
+                                account = "${agentAccount.value?.account}",
                                 mobile = "${user?.mobile}",
-                                trx = "${validationData.value?.tracNo}",
                                 agentId = "${user?.account?.first()?.agentID}",
                                 pin = password,
                                 model = model,
-                                otp = otp,
-                                context = context
+                                context = context,
+                                data = hashMapOf(
+                                    "narration" to narration,
+                                    "senderName" to senderName,
+                                    "senderPhone" to "${user?.mobile}",
+                                    "charge" to totalAmount,
+                                    "currencyID" to "$currencyId",
+                                    "receiverName" to receiverName,
+                                    "receiverPhone" to "${countryCode()}$receiverMobile",
+                                    "amount" to amount,
+                                    "feeID" to "${
+                                        validationData
+                                            .value?.extra?.get("feeId")
+                                            .toString()
+                                            .toDouble()
+                                            .toInt()
+                                    }"
+                                )
                             )!!,
                             state = { screenState = it },
                             onResponse = { response ->
@@ -550,12 +674,18 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                                         }
                                     },
                                     onSuccess = { message ->
+                                        val convertedData = model.any.map(
+                                            model.any.convert(message!!.data)
+                                        )
+                                        val referenceValue = convertedData["BatchID"]
+                                            ?: convertedData["referance"]
+                                        val numberAsLong =
+                                            (referenceValue as? Number)?.toLong() ?: 0L
+                                        Log.e("hope", "$numberAsLong")
                                         moduleCall = Response.Success(
                                             data = hashMapOf(
-                                                "message" to message!!.message,
-                                                "reference" to model.any.map(
-                                                    model.any.convert(message.data)
-                                                )["BatchID"]
+                                                "message" to message.message,
+                                                "reference" to "$referenceValue"
                                             )
                                         )
                                         screenState = ModuleState.DISPLAY

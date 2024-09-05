@@ -54,6 +54,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.craftsilicon.shumul.agency.R
 import com.craftsilicon.shumul.agency.data.bean.AccountOpening
 import com.craftsilicon.shumul.agency.data.bean.CustomerValidation
+import com.craftsilicon.shumul.agency.data.bean.ImageHolder
 import com.craftsilicon.shumul.agency.data.source.model.LocalViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
@@ -97,6 +98,8 @@ fun AccountOpeningModule(data: GlobalData) {
     var product: HashMap<String, Any?> = remember {
         hashMapOf()
     }
+
+
 
     if (productData.isNotEmpty())
         LaunchedEffect(key1 = Unit) {

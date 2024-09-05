@@ -9,7 +9,7 @@ import javax.inject.Singleton
 data class ImageHolder(
     @field:Expose
     @field:SerializedName("passport")
-    val passport: String? = null,
+    var passport: String? = null,
     @field:Expose
     @field:SerializedName("idFront")
     var idFront: String? = null,

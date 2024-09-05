@@ -62,7 +62,9 @@ data class DeviceData(
     @field:Expose
     @Nullable
     val upload: String?
-)
+){
+
+}
 
 
 

@@ -28,7 +28,11 @@ class UserInteractionWatcher @Inject constructor(
         if (countDownTimer != null) timerControl(false)
         val timeout = dataSource.timeout.value
         val time = timeout ?: startTime
-        countDownTimer = OTPCountDownTimer(startTime = time, interval = INTERVAL, this)
+        countDownTimer = OTPCountDownTimer(
+            startTime = time,
+            interval = INTERVAL,
+            this
+        )
         setTime()
     }
 
@@ -68,8 +72,7 @@ class UserInteractionWatcher @Inject constructor(
 class OTPCountDownTimer(
     startTime: Long, interval: Long,
     private val interaction: InteractionDataSource
-) :
-    CountDownTimer(startTime, interval) {
+) : CountDownTimer(startTime, interval) {
     override fun onFinish() {
         interaction.done(true)
     }
