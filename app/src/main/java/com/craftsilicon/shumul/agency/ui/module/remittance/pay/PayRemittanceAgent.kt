@@ -288,6 +288,7 @@ fun PayRemittanceAgent(function: () -> Unit) {
                                     data = MutableStateFlow(agentAccounts)
                                 ) { result ->
                                     agentAccount.value = result.key as Account
+                                    currencyId="${agentAccount.value?.currency}"
                                 }
                             }
                         }
@@ -448,16 +449,8 @@ fun PayRemittanceAgent(function: () -> Unit) {
                                                                                     to map["receiver"],
                                                                             context.getString(R.string.receiver_mobile_)
                                                                                     to "${map["receiverMobile"] ?: 0}".toBigNumberDisplay(),
-                                                                            context.getString(R.string.fee_amount_)
-                                                                                    to hashMapOf(
-                                                                                "A" to map["agentFee"],
-                                                                                "B" to map["networkFee"],
-                                                                                "C" to map["destinationFee"]
-                                                                            ).sumOf(),
                                                                             context.getString(R.string.amount_)
                                                                                     to "${map["amount"] ?: 0}".toBigNumberDisplay(),
-                                                                            context.getString(R.string.total_amount_)
-                                                                                    to totalAmount,
                                                                         )
                                                                         extra = map.toHashMap()
                                                                         this.amount = totalAmount
@@ -542,8 +535,8 @@ fun PayRemittanceAgent(function: () -> Unit) {
                     action = {
                         val map = validationData.value!!.extra
                         val curr = "${map["remittanceCurrancyId"]}".toBigNumberDisplay()
-                        currencyId = curr
-                        if (currenciesData.find { it.id == curr }?.description == validationData.value?.currency)
+
+                        if (currenciesData.find { it.id == curr }?.description == currencyId)
                             model.web(
                                 path = "${model.deviceData?.agent}",
                                 data = RemittanceModuleHelper.payRemittance(
