@@ -367,9 +367,9 @@ object RemittanceModuleHelper {
             )
 
 
-            map["AccountID"] = account
+            map["AccountID"] = remittance
             map["MOBILENUMBER"] = mobile
-            map["BANKACCOUNTID"] = remittance
+            map["BANKACCOUNTID"] = account
             map["MOBILENUMBER"] = mobile
             map["AGENTID"] = agentId
             map["FUNCTIONNAME"] = "GETNAME"
