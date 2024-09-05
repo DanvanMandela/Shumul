@@ -52,8 +52,8 @@ fun imeiDeviceId(context: Context): String? {
 }
 
 object APP {
-    const val TEST = false
-    const val TEST_VENDOR = false
+    const val TEST = true
+    const val TEST_VENDOR = true
     const val TEST_CUSTOMER = true
     const val ACTIVATED = false
     const val BANK_ID = "9981"
