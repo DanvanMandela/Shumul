@@ -105,9 +105,7 @@ fun PayRemittanceAgent(function: () -> Unit) {
         mutableStateOf(model.preferences.appUserState.value)
     }
     val scope = rememberCoroutineScope()
-    var narration by rememberSaveable {
-        mutableStateOf("")
-    }
+
 
     val agentAccounts = remember { SnapshotStateList<DropDownResult>() }
     val agentAccount: MutableState<Account?> = remember {
@@ -317,29 +315,6 @@ fun PayRemittanceAgent(function: () -> Unit) {
                         )
                         Spacer(modifier = Modifier.size(16.dp))
                         OutlinedTextField(
-                            value = narration,
-                            onValueChange = { narration = it },
-                            label = {
-                                Text(
-                                    text = stringResource(id = R.string.narration_),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
-                                )
-                            }, modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = horizontalModulePadding),
-                            textStyle = TextStyle(
-                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                fontSize = MaterialTheme.typography.labelLarge.fontSize
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Text
-                            )
-                        )
-                        Spacer(modifier = Modifier.size(16.dp))
-                        OutlinedTextField(
                             value = password,
                             onValueChange = { password = it },
                             label = {
@@ -391,11 +366,7 @@ fun PayRemittanceAgent(function: () -> Unit) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_receiver_name_)
                                         )
-                                    } else if (narration.isBlank()) {
-                                        snackState.showSnackbar(
-                                            context.getString(R.string.enter_narration_)
-                                        )
-                                    } else if (password.isBlank()) {
+                                    }  else if (password.isBlank()) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_pin_)
                                         )
@@ -548,7 +519,6 @@ fun PayRemittanceAgent(function: () -> Unit) {
                                     model = model,
                                     context = context,
                                     data = hashMapOf(
-                                        "narration" to narration,
                                         "senderName" to "${map["sender"]}",
                                         "senderPhone" to "${map["senderMobile"]}",
                                         "charge" to "${validationData.value?.amount}",
