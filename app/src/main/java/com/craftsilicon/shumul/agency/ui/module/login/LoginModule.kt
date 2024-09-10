@@ -210,6 +210,8 @@ fun LoginModule(data: GlobalData) {
                         Spacer(modifier = Modifier.size(24.dp))
                         Button(
                             onClick = {
+                                val use = model.userState
+                                val stateAccount = use?.account?.first()
                                 scope.launch {
                                     if (password.isBlank()) {
                                         snackState.showSnackbar(
@@ -220,8 +222,8 @@ fun LoginModule(data: GlobalData) {
                                             model.web(
                                                 path = "${model.deviceData?.agent}",
                                                 data = loginFunc(
-                                                    username = "${user?.account?.lastOrNull()?.agentID}",
-                                                    mobile = "${user?.mobile}",
+                                                    username = "${stateAccount?.agentID}",
+                                                    mobile = "${use?.mobile}",
                                                     pin = password,
                                                     model = model,
                                                     context = context

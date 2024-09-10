@@ -674,6 +674,8 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                 Response.Confirm -> AccountOpeningDialog(selfie = passportUri.value!!,
                     user = accountOpen, close = { who.value = NothingShow },
                     action = {
+                        val use = model.userState
+                        val stateAccount = use?.account?.first()
                         who.value = NothingShow
                         screenState = ModuleState.LOADING
                         action = {
@@ -685,11 +687,11 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                         "issued" to issuied
                                     ),
                                     officer = special,
-                                    branch = "${user?.account?.firstOrNull()?.branchId}",
+                                    branch = "${stateAccount?.branchId}",
                                     accountOpening = accountOpen!!,
-                                    account = "${user?.account?.firstOrNull()?.account}",
-                                    mobile = "${user?.mobile}",
-                                    agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                    account = "${stateAccount?.account}",
+                                    mobile = "${use?.mobile}",
+                                    agentId = "${stateAccount?.agentID}",
                                     model = model,
                                     context = context
                                 )!!,
@@ -711,8 +713,8 @@ fun AccountOpeningDocumentModule(data: GlobalData) {
                                             val dataHolder = hashMapOf(
                                                 "path" to "${model.deviceData?.upload}",
                                                 "unique" to unique!!,
-                                                "customerId" to "${user?.account?.lastOrNull()?.agentID}",
-                                                "mobileNumber" to "${user?.mobile}",
+                                                "customerId" to "${stateAccount?.agentID}",
+                                                "mobileNumber" to "${use?.mobile}",
                                                 "customerNumber" to "${accountOpen.validation?.mobile}",
                                                 "country" to country,
                                                 "bankId" to BANK_ID,

@@ -2,11 +2,13 @@ package com.craftsilicon.shumul.agency.data.source.model
 
 import retrofit2.HttpException
 import androidx.lifecycle.ViewModel
+import com.craftsilicon.shumul.agency.data.bean.AppUserState
 import com.craftsilicon.shumul.agency.data.bean.BalanceBeanTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.CurrencyBeanTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.MiniDataTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.ProductBeanTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.StaticDataResponseTypeConverter
+import com.craftsilicon.shumul.agency.data.bean.UserData
 import com.craftsilicon.shumul.agency.data.bean.UserDataTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.ValidationResponseTypeConverter
 import com.craftsilicon.shumul.agency.data.bean.WorkSectorBeanTypeConverter
@@ -53,6 +55,10 @@ class RemoteViewModelImpl @Inject constructor(
 
     override val deviceData: DeviceData?
         get() = preferences.deviceData.value
+
+    override val userState: UserData?
+        get() = preferences.userData.value
+
     override val token: String? = preferences.token.value
 
     override fun web(
@@ -62,10 +68,10 @@ class RemoteViewModelImpl @Inject constructor(
         onResponse: (response: HashMap<String, Any?>) -> Unit
     ) {
         val dispose = CompositeDisposable()
-        val token = "${preferences.token.value}"
+
         dispose.add(repo.web(
             path = path,
-            token = token,
+            token = "$token",
             data = data
         ).doOnSubscribe { state(ModuleState.LOADING) }
             .doOnError { state(ModuleState.ERROR) }
@@ -135,6 +141,8 @@ interface RemoteViewModel {
     )
 
     val deviceData: DeviceData?
+
+    val userState: UserData?
 
     val token: String?
 }

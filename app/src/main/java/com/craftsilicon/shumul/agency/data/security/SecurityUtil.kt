@@ -54,7 +54,7 @@ fun imeiDeviceId(context: Context): String? {
 object APP {
     const val TEST = true
     const val TEST_VENDOR = true
-    const val TEST_CUSTOMER = true
+    const val TEST_CUSTOMER = false
     const val ACTIVATED = false
     const val BANK_ID = "9981"
     const val CODE_BASE = "ANDROID"
@@ -68,10 +68,12 @@ object APP {
         action: String,
         uniqueId: String
     ): HashMap<String, Any?> {
+        val agent = storage.appUserState.value
         return hashMapOf(
             "FormID" to action,
             "APPNAME" to APP_NAME,
             "BANKID" to BANK_ID,
+            "AGENTID" to agent?.agent,
             "CustomerID" to customerID,
             "SessionID" to storage.sessionID.value,
             "VersionNumber" to appVersion(context),

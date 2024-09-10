@@ -66,11 +66,14 @@ import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
 import com.craftsilicon.shumul.agency.ui.module.ConfirmDialog
+import com.craftsilicon.shumul.agency.ui.module.ErrorDialog
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
 import com.craftsilicon.shumul.agency.ui.module.validation.ValidationHelper
+import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
+import com.craftsilicon.shumul.agency.ui.navigation.Module
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
@@ -83,7 +86,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @Composable
-fun RemittanceModuleAgent(function: () -> Unit) {
+fun RemittanceModuleAgent(function: () -> Unit, data: GlobalData) {
     val context = LocalContext.current
     val work = hiltViewModel<WorkViewModel>()
     val owner = LocalLifecycleOwner.current
@@ -150,6 +153,8 @@ fun RemittanceModuleAgent(function: () -> Unit) {
 
     var showDialog by remember { mutableStateOf(false) }
 
+    var showErrorDialog by remember { mutableStateOf(false) }
+
 
     var passwordVisibility by remember { mutableStateOf(false) }
 
@@ -162,14 +167,16 @@ fun RemittanceModuleAgent(function: () -> Unit) {
 
     if (currencyData.isEmpty())
         LaunchedEffect(key1 = Unit) {
+            val use = model.userState
+            val stateAccount = use?.account?.first()
             delay(600)
             action = {
                 model.web(
                     path = "${model.deviceData?.agent}",
                     data = RemittanceModuleHelper.currency(
-                        account = "${user?.account?.lastOrNull()?.account}",
-                        mobile = "${user?.mobile}",
-                        agentId = "${user?.account?.firstOrNull()?.agentID}",
+                        account = "${stateAccount?.account}",
+                        mobile = "${use?.mobile}",
+                        agentId = "${stateAccount?.agentID}",
                         model = model,
                         context = context
                     )!!,
@@ -193,19 +200,7 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                                     delay(200)
                                 }
                             }, onToken = {
-                                work.routeData(owner, object :
-                                    WorkStatus {
-                                    override fun workDone(b: Boolean) {
-                                        if (b) action.invoke()
-                                    }
-
-                                    override fun progress(p: Int) {
-                                        AppLogger.instance.appLog(
-                                            "DATA:Progress",
-                                            "$p"
-                                        )
-                                    }
-                                })
+                                showErrorDialog = true
                             }
                         )
                     }
@@ -471,6 +466,7 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                         Spacer(modifier = Modifier.size(horizontalModulePadding))
                         Button(
                             onClick = {
+                                val use = model.userState
                                 scope.launch {
                                     if (agentAccount.value == null) {
                                         snackState.showSnackbar(
@@ -507,7 +503,7 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                                                     mobile = receiverMobile,
                                                     context = context,
                                                     model = model,
-                                                    currency = "$currencyId"
+                                                    currency = currencyId
                                                 )!!,
                                                 state = { screenState = it },
                                                 onResponse = { response ->
@@ -540,7 +536,7 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                                                                         context.getString(R.string.sender_name_)
                                                                                 to senderName,
                                                                         context.getString(R.string.sender_mobile_)
-                                                                                to "${user?.mobile}",
+                                                                                to "${use?.mobile}",
                                                                         context.getString(R.string.receiver_name_)
                                                                                 to receiverName,
                                                                         context.getString(R.string.receiver_mobile_)
@@ -563,19 +559,7 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                                                                 }
                                                             showDialog = true
                                                         }, onToken = {
-                                                            work.routeData(owner, object :
-                                                                WorkStatus {
-                                                                override fun workDone(b: Boolean) {
-                                                                    if (b) action.invoke()
-                                                                }
-
-                                                                override fun progress(p: Int) {
-                                                                    AppLogger.instance.appLog(
-                                                                        "DATA:Progress",
-                                                                        "$p"
-                                                                    )
-                                                                }
-                                                            })
+                                                            showErrorDialog = true
                                                         }
                                                     )
                                                 }
@@ -618,6 +602,12 @@ fun RemittanceModuleAgent(function: () -> Unit) {
         }
 
 
+        if (showErrorDialog) ErrorDialog(message = stringResource(id = R.string.session_expired_login_)) {
+            showErrorDialog = false
+            data.controller.navigate(Module.Splash.route)
+        }
+
+
 
         if (showDialog) when (val s = moduleCall) {
             is Response.Success -> SuccessDialog(
@@ -631,23 +621,24 @@ fun RemittanceModuleAgent(function: () -> Unit) {
             is Response.Confirm -> ConfirmDialog(
                 data = validationData.value!!,
                 action = {
+                    val use = model.userState
                     showDialog = false
                     action = {
                         model.web(
                             path = "${model.deviceData?.agent}",
                             data = RemittanceModuleHelper.remittanceAgent(
                                 account = "${agentAccount.value?.account}",
-                                mobile = "${user?.mobile}",
-                                agentId = "${user?.account?.first()?.agentID}",
+                                mobile = "${use?.mobile}",
+                                agentId = "${agentAccount.value?.agentID}",
                                 pin = password,
                                 model = model,
                                 context = context,
                                 data = hashMapOf(
                                     "narration" to narration,
                                     "senderName" to senderName,
-                                    "senderPhone" to "${user?.mobile}",
+                                    "senderPhone" to "${use?.mobile}",
                                     "charge" to totalAmount,
-                                    "currencyID" to "$currencyId",
+                                    "currencyID" to currencyId,
                                     "receiverName" to receiverName,
                                     "receiverPhone" to "${countryCode()}$receiverMobile",
                                     "amount" to amount,
@@ -691,19 +682,7 @@ fun RemittanceModuleAgent(function: () -> Unit) {
                                         screenState = ModuleState.DISPLAY
                                         showDialog = true
                                     }, onToken = {
-                                        work.routeData(owner, object :
-                                            WorkStatus {
-                                            override fun workDone(b: Boolean) {
-                                                if (b) action.invoke()
-                                            }
-
-                                            override fun progress(p: Int) {
-                                                AppLogger.instance.appLog(
-                                                    "DATA:Progress",
-                                                    "$p"
-                                                )
-                                            }
-                                        })
+                                        showErrorDialog = true
                                     }
                                 )
                             }

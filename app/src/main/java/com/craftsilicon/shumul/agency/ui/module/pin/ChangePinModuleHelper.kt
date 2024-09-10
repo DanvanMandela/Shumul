@@ -90,7 +90,7 @@ fun changePin(
         map["AccountID"] = account
         map["BANKACCOUNTID"] = account
         map["MOBILENUMBER"] = mobile
-        map["AGENTID"] = agentId
+        map["AGENTID"]=agentId
         map["OLDMPIN"] = Util.newEncrypt(pin["old"])
         map["NEWMPIN"] =  Util.newEncrypt(pin["new"])
         map["CONFIRMPIN"] =  Util.newEncrypt(pin["new"])

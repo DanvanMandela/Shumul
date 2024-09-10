@@ -1,10 +1,8 @@
 package com.craftsilicon.shumul.agency.ui.module.data
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +14,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -56,132 +51,152 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.craftsilicon.shumul.agency.R
-import com.craftsilicon.shumul.agency.data.bean.Account
-import com.craftsilicon.shumul.agency.data.bean.ValidationBean
+import com.craftsilicon.shumul.agency.data.bean.staticDataResponse
 import com.craftsilicon.shumul.agency.data.security.APP
 import com.craftsilicon.shumul.agency.data.security.ActivationData
 import com.craftsilicon.shumul.agency.data.source.model.LocalViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
-import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
-import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
-import com.craftsilicon.shumul.agency.ui.module.ConfirmDialog
-import com.craftsilicon.shumul.agency.ui.module.ModuleCall
-import com.craftsilicon.shumul.agency.ui.module.Response
+import com.craftsilicon.shumul.agency.ui.module.ErrorDialog
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
-import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
-import com.craftsilicon.shumul.agency.ui.module.remittance.RemittanceModuleHelper
-import com.craftsilicon.shumul.agency.ui.module.remittance.sumOf
-import com.craftsilicon.shumul.agency.ui.module.toBigNumberDisplay
-import com.craftsilicon.shumul.agency.ui.module.toHashMap
+import com.craftsilicon.shumul.agency.ui.module.airtime.airtimeValidate
+import com.craftsilicon.shumul.agency.ui.module.airtime.boq
+import com.craftsilicon.shumul.agency.ui.module.airtime.mnoData
+import com.craftsilicon.shumul.agency.ui.module.dashboard.balance.BalanceModuleResponse
 import com.craftsilicon.shumul.agency.ui.module.validation.ValidationHelper
+import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
+import com.craftsilicon.shumul.agency.ui.navigation.Module
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
-import com.craftsilicon.shumul.agency.ui.util.AppLogger
+import com.craftsilicon.shumul.agency.ui.navigation.NavigateDialog
+import com.craftsilicon.shumul.agency.ui.navigation.NavigationType
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
+import com.craftsilicon.shumul.agency.ui.util.MoneyVisualTransformation
+import com.craftsilicon.shumul.agency.ui.util.countryCode
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
-import com.google.gson.internal.LinkedTreeMap
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @Composable
-fun DataPurchaseCustomerModule(function: () -> Unit) {
+fun DataPurchaseCustomerModule(function: () -> Unit, data: GlobalData) {
     val context = LocalContext.current
-    val work = hiltViewModel<WorkViewModel>()
-    val owner = LocalLifecycleOwner.current
     val model: RemoteViewModelImpl = hiltViewModel()
     val snackState = remember { SnackbarHostState() }
+
     var screenState: ModuleState by remember {
-        mutableStateOf(ModuleState.DISPLAY)
+        mutableStateOf(ModuleState.LOADING)
     }
+
+    var dataStage: DataStage by remember {
+        mutableStateOf(DataStage.Validation)
+    }
+
     val local = hiltViewModel<LocalViewModelImpl>()
 
-    val user = model.preferences.userData.collectAsState().value
-    val appUser by remember {
-        mutableStateOf(model.preferences.appUserState.value)
+    val subs = remember { SnapshotStateList<DropDownResult>() }
+    var sub by rememberSaveable {
+        mutableStateOf("")
     }
+
     val scope = rememberCoroutineScope()
+
+    var account by rememberSaveable {
+        mutableStateOf("")
+    }
+
+    var mno by rememberSaveable {
+        mutableStateOf("")
+    }
+
+    var lineType by rememberSaveable {
+        mutableStateOf("0")
+    }
+
+    var mobile by rememberSaveable {
+        mutableStateOf("")
+    }
     var narration by rememberSaveable {
         mutableStateOf("")
     }
+    var amount by rememberSaveable {
+        mutableStateOf("")
+    }
 
-    val agentAccounts = remember { SnapshotStateList<DropDownResult>() }
-    val agentAccount: MutableState<Account?> = remember {
+    val staticData = local.staticData.collectAsState().value
+
+    var static by rememberSaveable {
+        mutableStateOf("")
+    }
+
+    val appUser by remember {
+        mutableStateOf(model.preferences.appUserState.value)
+    }
+
+    val user = model.preferences.userData.collectAsState().value
+    val mnoData = remember { SnapshotStateList<DropDownResult>() }
+
+
+    var bouquet: HashMap<String, Any?> = remember {
+        hashMapOf()
+    }
+
+    val bouquetData = remember { SnapshotStateList<DropDownResult>() }
+
+
+    var navType: NavigationType? by remember {
         mutableStateOf(null)
     }
 
+    var showErrorDialog by remember { mutableStateOf(false) }
 
-    var totalAmount by rememberSaveable {
-        mutableStateOf("")
-    }
-
-
-    val validationData: MutableState<ValidationBean?> = remember {
-        mutableStateOf(null)
-    }
-
-
-    var currencyId by rememberSaveable {
-        mutableStateOf("")
-    }
-
-    var remittanceValue by rememberSaveable {
-        mutableStateOf("")
-    }
-
-
-    var moduleCall: ModuleCall by remember {
-        mutableStateOf(Response.Confirm)
-    }
 
     var showDialog by remember { mutableStateOf(false) }
-    val currenciesData = local.currency.collectAsState().value
+
 
     var passwordVisibility by remember { mutableStateOf(false) }
 
     var password by rememberSaveable {
         mutableStateOf(if (APP.ACTIVATED) ActivationData.AGENT_PIN else "")
     }
-
-
     var action: () -> Unit = {}
 
 
-
-    LaunchedEffect(key1 = Unit) {
-        user?.account?.forEach {
-            agentAccounts.apply {
-                removeIf { p -> p.key == it }
-                add(
-                    DropDownResult(
-                        key = it,
-                        desc = it.account,
-                        display = it == user.account.first()
-                    )
+    LaunchedEffect(Unit) {
+        context.resources.getStringArray(R.array.sub_type).forEach {
+            subs.add(
+                DropDownResult(
+                    key = it,
+                    desc = it,
+                    display = it == sub
                 )
-            }
+            )
         }
     }
 
-    if (currenciesData.isEmpty())
+
+    if (staticData.isEmpty())
         LaunchedEffect(key1 = Unit) {
             delay(600)
             action = {
+                val use = model.userState
+                val stateAccount = use?.account?.first()
                 model.web(
                     path = "${model.deviceData?.agent}",
-                    data = RemittanceModuleHelper.currency(
-                        account = "${user?.account?.lastOrNull()?.account}",
-                        mobile = "${appUser?.mobile}",
-                        agentId = "${appUser?.agent}",
+                    data = mnoData(
+                        account = "${stateAccount?.account}",
+                        mobile = "${use?.mobile}",
+                        agentId = "${stateAccount?.agentID}",
                         model = model,
                         context = context
                     )!!,
                     state = { screenState = it },
                     onResponse = { response ->
-                        RemittanceModuleHelper.currencyResponse(
+                        staticDataResponse(
                             response = response,
                             model = model,
                             onError = { error ->
@@ -194,24 +209,12 @@ fun DataPurchaseCustomerModule(function: () -> Unit) {
                             },
                             onSuccess = { beans ->
                                 scope.launch {
-                                    local.currency.value = beans
+                                    local.staticData.value = beans
                                     screenState = ModuleState.DISPLAY
                                     delay(200)
                                 }
                             }, onToken = {
-                                work.routeData(owner, object :
-                                    WorkStatus {
-                                    override fun workDone(b: Boolean) {
-                                        if (b) action.invoke()
-                                    }
-
-                                    override fun progress(p: Int) {
-                                        AppLogger.instance.appLog(
-                                            "DATA:Progress",
-                                            "$p"
-                                        )
-                                    }
-                                })
+                                showErrorDialog = true
                             }
                         )
                     }
@@ -220,60 +223,103 @@ fun DataPurchaseCustomerModule(function: () -> Unit) {
             action.invoke()
         }
 
+    LaunchedEffect(staticData) {
+        staticData.forEach {
+            mnoData.add(
+                DropDownResult(
+                    key = it.id,
+                    desc = it.description,
+                    extra = it.descTwo
+                )
+            )
+        }
+    }
+
 
     Box {
+
         when (screenState) {
             ModuleState.LOADING -> LoadingModule()
             ModuleState.ERROR,
             ModuleState.DISPLAY -> Column(
                 modifier = Modifier
+                    .verticalScroll(rememberScrollState())
                     .fillMaxSize()
                     .background(Color.White),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 CompositionLocalProvider(LocalLayoutDirection provides layoutDirection()) {
+
+
                     Column(
                         modifier = Modifier
                             .background(MaterialTheme.colorScheme.background)
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState()),
+                            .fillMaxSize(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        if (validationData.value != null) {
-                            Spacer(modifier = Modifier.size(ButtonDefaults.IconSize))
-                            Card(
-                                onClick = { }, modifier = Modifier
+                        if (bouquetData.isNotEmpty()) {
+                            Spacer(modifier = Modifier.size(16.dp))
+                            Box(
+                                modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = horizontalModulePadding)
                             ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp)
-                                ) {
-                                    validationData.value?.display?.entries?.forEach { item ->
-                                        Row(modifier = Modifier.fillMaxWidth()) {
-                                            Text(
-                                                text = item.key,
-                                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                                textAlign = TextAlign.Start,
-                                                style = MaterialTheme.typography.labelMedium,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .weight(1f)
-                                            )
-                                            Spacer(modifier = Modifier.size(24.dp))
-                                            Text(
-                                                text = "${item.value}",
-                                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                                textAlign = TextAlign.End,
-                                                style = MaterialTheme.typography.labelMedium,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .weight(1f)
-                                            )
-                                        }
-                                    }
+                                EditDropDown(
+                                    label = stringResource(id = R.string.bouquet),
+                                    data = MutableStateFlow(bouquetData)
+                                ) { result ->
+                                    bouquet = hashMapOf(
+                                        "name" to result.desc,
+                                        "number" to result.key,
+                                        "amount" to result.extra
+                                    )
+                                    amount = "${bouquet["amount"]}"
+                                }
+                            }
+                            Spacer(modifier = Modifier.size(16.dp))
+
+                            OutlinedTextField(
+                                value = amount,
+                                onValueChange = { amount = it },
+                                label = {
+                                    Text(
+                                        text = stringResource(id = R.string.amount_),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontFamily = FontFamily(Font(R.font.montserrat_medium))
+                                    )
+                                }, modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = horizontalModulePadding),
+                                textStyle = TextStyle(
+                                    fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                    fontSize = MaterialTheme.typography.labelLarge.fontSize
+                                ),
+                                readOnly = true,
+                                suffix = {
+                                    Text(
+                                        text = stringResource(id = R.string.currency_symbol_),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold))
+                                    )
+                                },
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Next,
+                                    keyboardType = KeyboardType.Phone
+                                ), visualTransformation = MoneyVisualTransformation()
+                            )
+                        } else {
+                            Spacer(modifier = Modifier.size(16.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = horizontalModulePadding)
+                            ) {
+                                EditDropDown(
+                                    label = stringResource(id = R.string.subscription_),
+                                    data = MutableStateFlow(subs)
+                                ) { result ->
+                                    sub = result.key as String
                                 }
                             }
                             Spacer(modifier = Modifier.size(16.dp))
@@ -283,59 +329,91 @@ fun DataPurchaseCustomerModule(function: () -> Unit) {
                                     .padding(horizontal = horizontalModulePadding)
                             ) {
                                 EditDropDown(
-                                    label = stringResource(id = R.string.agent_account_),
-                                    data = MutableStateFlow(agentAccounts)
+                                    label = stringResource(id = R.string.mno_),
+                                    data = MutableStateFlow(mnoData)
                                 ) { result ->
-                                    agentAccount.value = result.key as Account
+                                    mno = result.key as String
+                                    if (result.extra != null)
+                                        static = "${result.extra}"
                                 }
                             }
+                            Spacer(modifier = Modifier.size(16.dp))
+                            OutlinedTextField(
+                                value = account,
+                                onValueChange = { account = it },
+                                label = {
+                                    Text(
+                                        text = stringResource(id = R.string.account_number_),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontFamily = FontFamily(Font(R.font.montserrat_medium))
+                                    )
+                                }, modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = horizontalModulePadding),
+                                textStyle = TextStyle(
+                                    fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                    fontSize = MaterialTheme.typography.labelLarge.fontSize
+                                ),
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Next,
+                                    keyboardType = KeyboardType.Text
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.size(16.dp))
+                            OutlinedTextField(
+                                value = mobile,
+                                onValueChange = { mobile = it },
+                                label = {
+                                    Text(
+                                        text = stringResource(id = R.string.mobile_number_),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontFamily = FontFamily(Font(R.font.montserrat_medium))
+                                    )
+                                }, modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = horizontalModulePadding),
+                                textStyle = TextStyle(
+                                    fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                    fontSize = MaterialTheme.typography.labelLarge.fontSize
+                                ),
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Done,
+                                    keyboardType = KeyboardType.Phone
+                                ), prefix = {
+                                    Text(
+                                        text = countryCode(),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold))
+                                    )
+                                }
+                            )
+                            Spacer(modifier = Modifier.size(16.dp))
+                            OutlinedTextField(
+                                value = narration,
+                                onValueChange = { narration = it },
+                                label = {
+                                    Text(
+                                        text = stringResource(id = R.string.narration_),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontFamily = FontFamily(Font(R.font.montserrat_medium))
+                                    )
+                                }, modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = horizontalModulePadding),
+                                textStyle = TextStyle(
+                                    fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                    fontSize = MaterialTheme.typography.labelLarge.fontSize
+                                ),
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Next,
+                                    keyboardType = KeyboardType.Text
+                                )
+                            )
                         }
-                        Spacer(modifier = Modifier.size(16.dp))
-                        OutlinedTextField(
-                            value = remittanceValue,
-                            onValueChange = { remittanceValue = it },
-                            label = {
-                                Text(
-                                    text = stringResource(id = R.string.remittance_number_),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
-                                )
-                            }, modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = horizontalModulePadding),
-                            textStyle = TextStyle(
-                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                fontSize = MaterialTheme.typography.labelLarge.fontSize
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Text
-                            )
-                        )
-                        Spacer(modifier = Modifier.size(16.dp))
-                        OutlinedTextField(
-                            value = narration,
-                            onValueChange = { narration = it },
-                            label = {
-                                Text(
-                                    text = stringResource(id = R.string.narration_),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontFamily = FontFamily(Font(R.font.montserrat_medium))
-                                )
-                            }, modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = horizontalModulePadding),
-                            textStyle = TextStyle(
-                                fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
-                                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                                fontSize = MaterialTheme.typography.labelLarge.fontSize
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next,
-                                keyboardType = KeyboardType.Text
-                            )
-                        )
                         Spacer(modifier = Modifier.size(16.dp))
                         OutlinedTextField(
                             value = password,
@@ -384,111 +462,246 @@ fun DataPurchaseCustomerModule(function: () -> Unit) {
                         Spacer(modifier = Modifier.size(horizontalModulePadding))
                         Button(
                             onClick = {
+                                val use = model.userState
+                                val stateAccount = use?.account?.first()
                                 scope.launch {
-                                    if (remittanceValue.isBlank()) {
-                                        snackState.showSnackbar(
-                                            context.getString(R.string.enter_receiver_name_)
-                                        )
-                                    } else if (narration.isBlank()) {
-                                        snackState.showSnackbar(
-                                            context.getString(R.string.enter_narration_)
-                                        )
-                                    } else if (password.isBlank()) {
-                                        snackState.showSnackbar(
-                                            context.getString(R.string.enter_pin_)
-                                        )
-                                    } else {
-                                        action = {
-                                            if (validationData.value == null)
-                                                model.web(
-                                                    path = "${model.deviceData?.agent}",
-                                                    data = RemittanceModuleHelper.search(
-                                                        account = remittanceValue,
-                                                        agentId = "${appUser?.agent}",
-                                                        mobile = "${appUser?.mobile}",
-                                                        context = context,
-                                                        model = model
-                                                    )!!,
-                                                    state = { screenState = it },
-                                                    onResponse = { response ->
-                                                        ValidationHelper.validateHash(
-                                                            response = response,
-                                                            model = model,
-                                                            onError = { error ->
-                                                                screenState = ModuleState.ERROR
-                                                                scope.launch {
-                                                                    snackState.showSnackbar(
-                                                                        message = "$error"
-                                                                    )
-                                                                }
+                                    when (dataStage) {
+                                        DataStage.Validation -> {
+                                            if (mno.isEmpty()) {
+                                                snackState.showSnackbar(
+                                                    context.getString(R.string.select_service_provider_)
+                                                )
+                                            } else if (account.isBlank()) {
+                                                snackState.showSnackbar(
+                                                    context.getString(R.string.enter_account_number)
+                                                )
+                                            } else if (mobile.isEmpty()) {
+                                                snackState.showSnackbar(
+                                                    context.getString(R.string.enter_mobile_number_)
+                                                )
+                                            } else if (password.isBlank()) {
+                                                snackState.showSnackbar(
+                                                    context.getString(R.string.enter_pin_)
+                                                )
+                                            } else {
+                                                action = {
+                                                    if (static.lowercase() == "YemenMobile".lowercase())
+                                                        model.web(
+                                                            path = "${model.deviceData?.agent}",
+                                                            data = airtimeValidate(
+                                                                account = "${stateAccount?.account}",
+                                                                mno = "1",
+                                                                mobile = mobile,
+                                                                agentId = "${stateAccount?.agentID}",
+                                                                model = model,
+                                                                context = context,
+                                                                pin = password,
+                                                            )!!,
+                                                            state = { screenState = it },
+                                                            onResponse = { response ->
+                                                                ValidationHelper.validateHashList(
+                                                                    response = response,
+                                                                    model = model,
+                                                                    onError = { error ->
+                                                                        screenState =
+                                                                            ModuleState.ERROR
+                                                                        scope.launch {
+                                                                            snackState.showSnackbar(
+                                                                                message = "$error"
+                                                                            )
+                                                                        }
+                                                                    },
+                                                                    onSuccess = { validateData ->
+                                                                        val map =
+                                                                            validateData.firstOrNull()
+                                                                        lineType =
+                                                                            "${map?.get("lineType")}"
+                                                                        action = {
+                                                                            model.web(
+                                                                                path = "${model.deviceData?.agent}",
+                                                                                data = boq(
+                                                                                    account = account,
+                                                                                    mno = static.lowercase(),
+                                                                                    mobile = mobile,
+                                                                                    agentId = "${stateAccount?.agentID}",
+                                                                                    model = model,
+                                                                                    context = context,
+                                                                                    pin = password,
+                                                                                    lineType = lineType
+                                                                                )!!,
+                                                                                state = {
+                                                                                    screenState = it
+                                                                                },
+                                                                                onResponse = { response ->
+                                                                                    ValidationHelper.validateHashList(
+                                                                                        response = response,
+                                                                                        model = model,
+                                                                                        onError = { error ->
+                                                                                            screenState =
+                                                                                                ModuleState.ERROR
+                                                                                            scope.launch {
+                                                                                                snackState.showSnackbar(
+                                                                                                    message = "$error"
+                                                                                                )
+                                                                                            }
+                                                                                        },
+                                                                                        onSuccess = { boq ->
+                                                                                            CoroutineScope(
+                                                                                                Dispatchers.Main
+                                                                                            ).launch {
+                                                                                                boq.forEach {
+                                                                                                    bouquetData.add(
+                                                                                                        DropDownResult(
+                                                                                                            key = it["bouquetNumber"],
+                                                                                                            desc = "${it["bouquetArabicName"]}",
+                                                                                                            extra = it["bouquetPrice"]
+                                                                                                        )
+                                                                                                    )
+                                                                                                }
+                                                                                            }
+                                                                                            screenState =
+                                                                                                ModuleState.DISPLAY
+                                                                                            dataStage =
+                                                                                                DataStage.Pay
+                                                                                        },
+                                                                                        onToken = {
+                                                                                            showErrorDialog =
+                                                                                                true
+                                                                                        }
+                                                                                    )
+                                                                                }
+                                                                            )
+                                                                        }
+                                                                        action.invoke()
+                                                                    }, onToken = {
+                                                                        showErrorDialog = true
+//
+                                                                    }
+                                                                )
+                                                            }
+                                                        ) else {
+                                                        model.web(
+                                                            path = "${model.deviceData?.agent}",
+                                                            data = boq(
+                                                                account = account,
+                                                                mno = static.lowercase(),
+                                                                mobile = mobile,
+                                                                agentId = "${stateAccount?.agentID}",
+                                                                model = model,
+                                                                context = context,
+                                                                pin = password,
+                                                                lineType = "0"
+                                                            )!!,
+                                                            state = {
+                                                                screenState = it
                                                             },
-                                                            onSuccess = { validation ->
-                                                                screenState = ModuleState.DISPLAY
-                                                                val mapList =
-                                                                    validation["searchData"] as MutableList<*>
-                                                                val map =
-                                                                    mapList.firstOrNull() as LinkedTreeMap<*, *>
-                                                                totalAmount = hashMapOf(
-                                                                    "A" to map["agentFee"],
-                                                                    "B" to map["networkFee"],
-                                                                    "C" to map["destinationFee"],
-                                                                    "D" to map["amount"]
-                                                                ).sumOf()
-                                                                moduleCall = Response.Confirm
-                                                                validationData.value =
-                                                                    ValidationBean().apply {
-                                                                        isOtp = false
-                                                                        display = linkedMapOf(
-                                                                            context.getString(R.string.sender_name_)
-                                                                                    to map["sender"],
-                                                                            context.getString(R.string.sender_mobile_)
-                                                                                    to "${map["senderMobile"] ?: 0}".toBigNumberDisplay(),
-                                                                            context.getString(R.string.receiver_name_)
-                                                                                    to map["receiver"],
-                                                                            context.getString(R.string.receiver_mobile_)
-                                                                                    to "${map["receiverMobile"] ?: 0}".toBigNumberDisplay(),
-                                                                            context.getString(R.string.fee_amount_)
-                                                                                    to hashMapOf(
-                                                                                "A" to map["agentFee"],
-                                                                                "B" to map["networkFee"],
-                                                                                "C" to map["destinationFee"]
-                                                                            ).sumOf(),
-                                                                            context.getString(R.string.amount_)
-                                                                                    to "${map["amount"] ?: 0}".toBigNumberDisplay(),
-                                                                            context.getString(R.string.total_amount_)
-                                                                                    to totalAmount,
-                                                                        )
-                                                                        extra = map.toHashMap()
-                                                                        this.amount = totalAmount
+                                                            onResponse = { response ->
+                                                                ValidationHelper.validateHashList(
+                                                                    response = response,
+                                                                    model = model,
+                                                                    onError = { error ->
+                                                                        screenState =
+                                                                            ModuleState.ERROR
+                                                                        scope.launch {
+                                                                            snackState.showSnackbar(
+                                                                                message = "$error"
+                                                                            )
+                                                                        }
+                                                                    },
+                                                                    onSuccess = { boq ->
+                                                                        CoroutineScope(
+                                                                            Dispatchers.Main
+                                                                        ).launch {
+                                                                            boq.forEach {
+                                                                                bouquetData.add(
+                                                                                    DropDownResult(
+                                                                                        key = it["bouquetNumber"],
+                                                                                        desc = "${it["bouquetArabicName"]}",
+                                                                                        extra = it["bouquetPrice"]
+                                                                                    )
+                                                                                )
+                                                                            }
+                                                                        }
+                                                                        screenState =
+                                                                            ModuleState.DISPLAY
+                                                                        dataStage =
+                                                                            DataStage.Pay
+                                                                    },
+                                                                    onToken = {
+                                                                        showErrorDialog =
+                                                                            true
                                                                     }
-                                                            }, onToken = {
-                                                                work.routeData(owner, object :
-                                                                    WorkStatus {
-                                                                    override fun workDone(b: Boolean) {
-                                                                        if (b) action.invoke()
-                                                                    }
-
-                                                                    override fun progress(p: Int) {
-                                                                        AppLogger.instance.appLog(
-                                                                            "DATA:Progress",
-                                                                            "$p"
-                                                                        )
-                                                                    }
-                                                                })
+                                                                )
                                                             }
                                                         )
+
                                                     }
-                                                )
-                                            else scope.launch {
-                                                if (agentAccount.value == null) {
-                                                    snackState.showSnackbar(
-                                                        context.getString(R.string.account_number_)
-                                                    )
-                                                } else showDialog = true
+
+                                                }
+                                                action.invoke()
                                             }
                                         }
-                                        action.invoke()
+
+                                        DataStage.Pay -> {
+                                            if (mno.isEmpty()) {
+                                                snackState.showSnackbar(
+                                                    context.getString(R.string.select_service_provider_)
+                                                )
+                                            } else {
+                                                action = {
+                                                    model.web(
+                                                        path = "${model.deviceData?.agent}",
+                                                        data = DataPurchaseModuleHelper.pay(
+                                                            account = account,
+                                                            mno = mno,
+                                                            mobile = mobile,
+                                                            agentId = "${stateAccount?.agentID}",
+                                                            model = model,
+                                                            context = context,
+                                                            pin = password,
+                                                            amount = amount,
+                                                            narration = "",
+                                                            offer = "${bouquet["number"]}",
+                                                            lineType = lineType,
+                                                            option = if (sub == "Renew") "renew" else "new"
+                                                        )!!,
+                                                        state = { screenState = it },
+                                                        onResponse = { response ->
+                                                            BalanceModuleResponse(
+                                                                response = response,
+                                                                model = model,
+                                                                onError = { error ->
+                                                                    screenState =
+                                                                        ModuleState.ERROR
+                                                                    scope.launch {
+                                                                        snackState.showSnackbar(
+                                                                            message = "$error"
+                                                                        )
+                                                                    }
+                                                                },
+                                                                onSuccess = { message ->
+                                                                    scope.launch {
+                                                                        screenState =
+                                                                            ModuleState.DISPLAY
+                                                                        delay(200)
+                                                                        navType = NavigateDialog
+                                                                            .Balance
+                                                                            .OnBalance(message!!)
+                                                                        showDialog = true
+                                                                    }
+                                                                }, onToken = {
+                                                                    showErrorDialog = true
+                                                                }
+                                                            )
+                                                        }
+                                                    )
+                                                }
+                                                action.invoke()
+                                            }
+                                        }
                                     }
+
+
                                 }
                             },
                             modifier = Modifier
@@ -503,9 +716,9 @@ fun DataPurchaseCustomerModule(function: () -> Unit) {
                                 style = MaterialTheme.typography.bodyLarge,
                             )
                         }
-                        Spacer(modifier = Modifier.size(horizontalModulePadding))
 
                     }
+
                 }
 
             }
@@ -523,110 +736,27 @@ fun DataPurchaseCustomerModule(function: () -> Unit) {
             )
         }
 
-
-
-        if (showDialog) when (val s = moduleCall) {
-            is Response.Success -> SuccessDialog(
-                message = "${s.data["message"]}",
-                reference = "${s.data["reference"]}",
-                action = {
-                    showDialog = false
-                    function()
-                })
-
-            is Response.Confirm -> ConfirmDialog(
-                data = validationData.value!!,
-                action = {
-                    showDialog = false
+        if (showDialog) when (navType) {
+            is NavigateDialog.Balance -> when (val s = navType) {
+                is NavigateDialog.Balance.OnBalance -> SuccessDialog(
+                    message = "${s.data.message}",
                     action = {
-                        val map = validationData.value!!.extra
-                        val curr = "${map["remittanceCurrancyId"]}".toBigNumberDisplay()
-                        currencyId = curr
-                        if (currenciesData.find { it.id == curr }?.description == validationData.value?.currency)
-                            model.web(
-                                path = "${model.deviceData?.agent}",
-                                data = RemittanceModuleHelper.payRemittance(
-                                    account = "${agentAccount.value?.account}",
-                                    remittance = remittanceValue,
-                                    mobile = "${appUser?.mobile}",
-                                    agentId = "${appUser?.agent}",
-                                    pin = password,
-                                    model = model,
-                                    context = context,
-                                    data = hashMapOf(
-                                        "narration" to narration,
-                                        "senderName" to "${map["sender"]}",
-                                        "senderPhone" to "${map["senderMobile"]}",
-                                        "charge" to "${validationData.value?.amount}",
-                                        "currencyID" to curr,
-                                        "receiverName" to "${map["receiver"]}",
-                                        "receiverPhone" to "${map["receiverMobile"]}",
-                                        "amount" to "${map["amount"] ?: 0}".toBigNumberDisplay(),
-                                        "feeID" to "${
-                                            map["feeId"]
-                                                .toString()
-                                                .toDouble()
-                                                .toInt()
-                                        }"
-                                    )
-                                )!!,
-                                state = { screenState = it },
-                                onResponse = { response ->
-                                    FundTransferModuleModuleResponse(
-                                        response = response,
-                                        model = model,
-                                        onError = { error ->
-                                            screenState = ModuleState.ERROR
-                                            scope.launch {
-                                                snackState.showSnackbar(
-                                                    message = "$error"
-                                                )
-                                            }
-                                        },
-                                        onSuccess = { message ->
-                                            val convertedData = model.any.map(
-                                                model.any.convert(message!!.data)
-                                            )
-                                            val referenceValue = convertedData["BatchID"]
-                                                ?: convertedData["referance"]
-                                            val numberAsLong =
-                                                (referenceValue as? Number)?.toLong() ?: 0L
-                                            Log.e("hope", "$numberAsLong")
-                                            moduleCall = Response.Success(
-                                                data = hashMapOf(
-                                                    "message" to message.message,
-                                                    "reference" to "$referenceValue"
-                                                )
-                                            )
-                                            screenState = ModuleState.DISPLAY
-                                            showDialog = true
-                                        }, onToken = {
-                                            work.routeData(owner, object :
-                                                WorkStatus {
-                                                override fun workDone(b: Boolean) {
-                                                    if (b) action.invoke()
-                                                }
+                        showDialog = false
+                        function()
+                    })
 
-                                                override fun progress(p: Int) {
-                                                    AppLogger.instance.appLog(
-                                                        "DATA:Progress",
-                                                        "$p"
-                                                    )
-                                                }
-                                            })
-                                        }
-                                    )
-                                }
-                            ) else scope.launch {
-                            snackState.showSnackbar(
-                                message = context.getString(R.string.currency_miss_match_)
-                            )
-                        }
-                    }
-                    action.invoke()
-                },
-                close = { showDialog = false })
+                else -> throw Exception("Not implemented")
+            }
+
+            else -> throw Exception("Not implemented")
         }
+
     }
+
+    if (showErrorDialog) ErrorDialog(message = stringResource(id = R.string.session_expired_login_)) {
+        showErrorDialog = false
+        data.controller.navigate(Module.Splash.route)
+    }
+
 
 }

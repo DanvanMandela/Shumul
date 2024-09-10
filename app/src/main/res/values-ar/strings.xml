@@ -201,5 +201,10 @@
     <string name="pay_remittance_">دفع الحوالة</string>
     <string name="remittance_number_">رقم الحوالة</string>
     <string name="currency_miss_match_">العملة في الحساب لا تتطابق</string>
+    <string name="subscription_">اشتراك</string>
+    <string name="alert_">تنبيه</string>
+    <string name="session_expired_login_">انتهت صلاحية الجلسة، الرجاء تسجيل الدخول</string>
+    <string name="bouquet">باقة</string>
+    <string name="renew">تجديد</string>
 
 </resources>

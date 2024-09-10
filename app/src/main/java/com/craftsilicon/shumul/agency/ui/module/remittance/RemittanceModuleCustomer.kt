@@ -67,6 +67,7 @@ import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
 import com.craftsilicon.shumul.agency.ui.module.ConfirmDialog
+import com.craftsilicon.shumul.agency.ui.module.ErrorDialog
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
@@ -77,6 +78,8 @@ import com.craftsilicon.shumul.agency.ui.module.validation.ValidationHelper
 import com.craftsilicon.shumul.agency.ui.module.validation.ValidationModuleResponse
 import com.craftsilicon.shumul.agency.ui.module.withdrawal.WithdrawalModuleHelper.otpTransactionAgent
 import com.craftsilicon.shumul.agency.ui.module.withdrawal.customerOtpTransactionCompleteFunc
+import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
+import com.craftsilicon.shumul.agency.ui.navigation.Module
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
@@ -89,7 +92,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @Composable
-fun RemittanceModuleCustomer(function: () -> Unit) {
+fun RemittanceModuleCustomer(function: () -> Unit, data: GlobalData) {
     val context = LocalContext.current
     val work = hiltViewModel<WorkViewModel>()
     val owner = LocalLifecycleOwner.current
@@ -169,6 +172,8 @@ fun RemittanceModuleCustomer(function: () -> Unit) {
 
     var showDialog by remember { mutableStateOf(false) }
 
+    var showErrorDialog by remember { mutableStateOf(false) }
+
 
     var passwordVisibility by remember { mutableStateOf(false) }
 
@@ -181,14 +186,16 @@ fun RemittanceModuleCustomer(function: () -> Unit) {
 
     if (currencyData.isEmpty())
         LaunchedEffect(key1 = Unit) {
+            val use = model.userState
+            val stateAccount = use?.account?.first()
             delay(600)
             action = {
                 model.web(
                     path = "${model.deviceData?.agent}",
                     data = RemittanceModuleHelper.currency(
-                        account = "${user?.account?.lastOrNull()?.account}",
-                        mobile = "${user?.mobile}",
-                        agentId = "${user?.account?.firstOrNull()?.agentID}",
+                        account = "${stateAccount?.account}",
+                        mobile = "${use?.mobile}",
+                        agentId = "${stateAccount?.agentID}",
                         model = model,
                         context = context
                     )!!,
@@ -212,19 +219,7 @@ fun RemittanceModuleCustomer(function: () -> Unit) {
                                     delay(200)
                                 }
                             }, onToken = {
-                                work.routeData(owner, object :
-                                    WorkStatus {
-                                    override fun workDone(b: Boolean) {
-                                        if (b) action.invoke()
-                                    }
-
-                                    override fun progress(p: Int) {
-                                        AppLogger.instance.appLog(
-                                            "DATA:Progress",
-                                            "$p"
-                                        )
-                                    }
-                                })
+                                showErrorDialog = true
                             }
                         )
                     }
@@ -517,6 +512,8 @@ fun RemittanceModuleCustomer(function: () -> Unit) {
                         Spacer(modifier = Modifier.size(horizontalModulePadding))
                         Button(
                             onClick = {
+                                val use = model.userState
+                                val stateAccount = use?.account?.first()
                                 scope.launch {
                                     if (account.isBlank()) {
                                         snackState.showSnackbar(
@@ -558,9 +555,9 @@ fun RemittanceModuleCustomer(function: () -> Unit) {
                                                     toAccount = account,
                                                     fromAccount = "${agentAccount.value?.account}",
                                                     amount = amount,
-                                                    mobile = "${user?.mobile}",
+                                                    mobile = "${use?.mobile}",
                                                     narration = narration,
-                                                    agentId = "${agentAccount.value?.agentID}",
+                                                    agentId = "${stateAccount?.agentID}",
                                                     pin = password,
                                                     model = model,
                                                     context = context
@@ -587,7 +584,7 @@ fun RemittanceModuleCustomer(function: () -> Unit) {
                                                                         path = "${model.deviceData?.agent}",
                                                                         data = RemittanceModuleHelper.getFee(
                                                                             account = account,
-                                                                            agentId = "${agentAccount.value?.agentID}",
+                                                                            agentId = "${stateAccount?.agentID}",
                                                                             amount = amount,
                                                                             mobile = receiverMobile,
                                                                             context = context,
@@ -677,25 +674,8 @@ fun RemittanceModuleCustomer(function: () -> Unit) {
                                                                                     showDialog =
                                                                                         true
                                                                                 }, onToken = {
-                                                                                    work.routeData(
-                                                                                        owner,
-                                                                                        object :
-                                                                                            WorkStatus {
-                                                                                            override fun workDone(
-                                                                                                b: Boolean
-                                                                                            ) {
-                                                                                                if (b) action.invoke()
-                                                                                            }
-
-                                                                                            override fun progress(
-                                                                                                p: Int
-                                                                                            ) {
-                                                                                                AppLogger.instance.appLog(
-                                                                                                    "DATA:Progress",
-                                                                                                    "$p"
-                                                                                                )
-                                                                                            }
-                                                                                        })
+                                                                                    showErrorDialog =
+                                                                                        true
                                                                                 }
                                                                             )
                                                                         }
@@ -710,19 +690,7 @@ fun RemittanceModuleCustomer(function: () -> Unit) {
                                                             }
                                                             action.invoke()
                                                         }, onToken = {
-                                                            work.routeData(owner, object :
-                                                                WorkStatus {
-                                                                override fun workDone(b: Boolean) {
-                                                                    if (b) action.invoke()
-                                                                }
-
-                                                                override fun progress(p: Int) {
-                                                                    AppLogger.instance.appLog(
-                                                                        "DATA:Progress",
-                                                                        "$p"
-                                                                    )
-                                                                }
-                                                            })
+                                                            showErrorDialog = true
                                                         }
                                                     )
                                                 }
@@ -755,6 +723,11 @@ fun RemittanceModuleCustomer(function: () -> Unit) {
             ModuleState.SUCCESS -> {}
         }
 
+        if (showErrorDialog) ErrorDialog(message = stringResource(id = R.string.session_expired_login_)) {
+            showErrorDialog = false
+            data.controller.navigate(Module.Splash.route)
+        }
+
         SnackbarHost(
             modifier = Modifier.align(Alignment.BottomCenter),
             hostState = snackState
@@ -766,7 +739,6 @@ fun RemittanceModuleCustomer(function: () -> Unit) {
         }
 
         if (showDialog)
-
             when (val s = moduleCall) {
                 is Response.Success -> SuccessDialog(
                     message = "${s.data["message"]}",
@@ -783,12 +755,14 @@ fun RemittanceModuleCustomer(function: () -> Unit) {
                     action = { otp ->
                         showDialog = false
                         action = {
+                            val use = model.userState
+                            val stateAccount = use?.account?.first()
                             model.web(
                                 path = "${model.deviceData?.agent}",
                                 data = RemittanceModuleHelper.remittanceCustomer(
                                     account = account,
-                                    mobile = "${user?.mobile}",
-                                    agentId = "${user?.account?.first()?.agentID}",
+                                    mobile = "${use?.mobile}",
+                                    agentId = "${stateAccount?.agentID}",
                                     pin = password,
                                     model = model,
                                     context = context,
@@ -842,19 +816,7 @@ fun RemittanceModuleCustomer(function: () -> Unit) {
                                             screenState = ModuleState.DISPLAY
                                             showDialog = true
                                         }, onToken = {
-                                            work.routeData(owner, object :
-                                                WorkStatus {
-                                                override fun workDone(b: Boolean) {
-                                                    if (b) action.invoke()
-                                                }
-
-                                                override fun progress(p: Int) {
-                                                    AppLogger.instance.appLog(
-                                                        "DATA:Progress",
-                                                        "$p"
-                                                    )
-                                                }
-                                            })
+                                            showErrorDialog = true
                                         }
                                     )
                                 }
@@ -865,4 +827,5 @@ fun RemittanceModuleCustomer(function: () -> Unit) {
                     close = { showDialog = false })
             }
     }
+
 }

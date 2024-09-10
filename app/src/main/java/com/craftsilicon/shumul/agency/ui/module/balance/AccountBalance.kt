@@ -223,6 +223,8 @@ fun AccountBalance(data: GlobalData) {
                             Spacer(modifier = Modifier.size(horizontalModulePadding))
                             Button(
                                 onClick = {
+                                    val use = model.userState
+                                    val stateAccount = use?.account?.first()
                                     scope.launch {
                                         if (account.isBlank()) {
                                             snackState.showSnackbar(
@@ -234,13 +236,14 @@ fun AccountBalance(data: GlobalData) {
                                             )
                                         } else {
                                             action = {
+
                                                 model.web(
                                                     path = "${model.deviceData?.agent}",
                                                     data = balanceFunc(
                                                         account = account,
-                                                        fromAccount = "${user?.account?.firstOrNull()?.account}",
-                                                        mobile = "${user?.mobile}",
-                                                        agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                                        fromAccount = "${stateAccount?.account}",
+                                                        mobile = "${use?.mobile}",
+                                                        agentId = "${stateAccount?.agentID}",
                                                         model = model,
                                                         context = context,
                                                         pin = password

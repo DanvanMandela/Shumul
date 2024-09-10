@@ -199,4 +199,9 @@
     <string name="pay_remittance_">Pay Remittance</string>
     <string name="remittance_number_">Remittance Number</string>
     <string name="currency_miss_match_">Account currency not matching</string>
+    <string name="subscription_">Subscription</string>
+    <string name="alert_">Alert</string>
+    <string name="session_expired_login_">Session Expired Login</string>
+    <string name="bouquet">Bouquet</string>
+    <string name="renew">Renew</string>
 </resources>

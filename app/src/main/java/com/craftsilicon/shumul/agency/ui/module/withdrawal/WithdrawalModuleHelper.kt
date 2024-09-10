@@ -88,7 +88,7 @@ fun withdrawalFunc(
         map["ACCOUNTID"] = toAccount
         map["BANKACCOUNTID"] = fromAccount
         map["MOBILENUMBER"] = mobile
-        map["AGENTID"] = agentId
+        map["AGENTID"]=agentId
         map["TRXAMOUNT"] = amount
         map["TRXMPIN"] = Util.newEncrypt(pin)
         map["INFOFIELD1"] = narration

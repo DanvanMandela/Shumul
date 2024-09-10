@@ -167,6 +167,7 @@ fun DashboardModule(data: GlobalData) {
                             )
                             Spacer(modifier = Modifier.size(16.dp))
                             AgentMenus { nav ->
+                                val use = model.userState
                                 when (nav.type) {
                                     is NavigateDialog -> when (nav.type) {
                                         NavigateDialog.Balance.OnRequest -> {
@@ -176,7 +177,7 @@ fun DashboardModule(data: GlobalData) {
                                                     data = balanceFunc(
                                                         account = "${account.value?.account}",
                                                         fromAccount = "${account.value?.account}",
-                                                        mobile = "${user?.mobile}",
+                                                        mobile = "${use?.mobile}",
                                                         agentId = "${account.value?.agentID}",
                                                         model = model,
                                                         pin = "$hello",
@@ -243,7 +244,7 @@ fun DashboardModule(data: GlobalData) {
                                                     path = "${model.deviceData?.agent}",
                                                     data = miniFunc(
                                                         account = "${account.value?.account}",
-                                                        mobile = "${user?.mobile}",
+                                                        mobile = "${use?.mobile}",
                                                         agentId = "${account.value?.agentID}",
                                                         model = model,
                                                         pin = "$hello",
@@ -348,6 +349,7 @@ fun DashboardModule(data: GlobalData) {
                     is NavigateDialog.Statement -> when (val s = navType) {
                         is NavigateDialog.Statement.Full -> FullStatementDatePicker(
                             action = { from, to ->
+                                val use = model.userState
                                 showDialog = false
                                 action = {
                                     model.web(
@@ -356,7 +358,7 @@ fun DashboardModule(data: GlobalData) {
                                             from = from,
                                             to = to,
                                             account = "${account.value?.account}",
-                                            mobile = "${user?.mobile}",
+                                            mobile = "${use?.mobile}",
                                             agentId = "${account.value?.agentID}",
                                             model = model,
                                             pin = "$hello",

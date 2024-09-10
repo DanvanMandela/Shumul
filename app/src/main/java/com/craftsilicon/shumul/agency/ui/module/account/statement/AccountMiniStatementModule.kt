@@ -186,6 +186,8 @@ fun AccountMiniStatementModule(action: () -> Unit) {
                         Spacer(modifier = Modifier.size(horizontalModulePadding))
                         Button(
                             onClick = {
+                                val use = model.userState
+                                val stateAccount = use?.account?.first()
                                 scope.launch {
                                     if (account.isBlank()) {
                                         snackState.showSnackbar(
@@ -201,8 +203,8 @@ fun AccountMiniStatementModule(action: () -> Unit) {
                                                 path = "${model.deviceData?.agent}",
                                                 data = miniFunc(
                                                     account = account,
-                                                    mobile = "${user?.mobile}",
-                                                    agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                                    mobile = "${use?.mobile}",
+                                                    agentId = "${stateAccount?.agentID}",
                                                     model = model,
                                                     pin = password,
                                                     context = context

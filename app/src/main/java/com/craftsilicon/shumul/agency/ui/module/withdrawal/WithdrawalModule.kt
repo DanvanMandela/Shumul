@@ -88,7 +88,7 @@ fun WithdrawalModule(data: GlobalData) {
                         }
                         AgentWithdrawalModule(function = {
                             data.controller.navigateUp()
-                        })
+                        }, data = data)
                     }
 
                     setComposable(route = Module.WithdrawalModule.Customer.route) {
@@ -97,7 +97,7 @@ fun WithdrawalModule(data: GlobalData) {
                         }
                         CustomerWithdrawalModule(function = {
                             data.controller.navigateUp()
-                        })
+                        }, data = data)
                     }
                 }
             }

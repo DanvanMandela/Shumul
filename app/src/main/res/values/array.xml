@@ -272,5 +272,10 @@
         <item>Widowed</item>
     </string-array>
 
+    <string-array name="sub_type">
+        <item>Renew</item>
+        <item>New Subscription</item>
+    </string-array>
+
 
 </resources>

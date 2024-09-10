@@ -45,7 +45,7 @@ object AccountToCashHelper {
             map["BANKACCOUNTID"] = clientAccount //Credit
 
             map["MOBILENUMBER"] = mobile
-            map["AGENTID"] = agentId
+            map["AGENTID"]=agentId
             map["TRXAMOUNT"] = amount
             map["TRXMPIN"] = Util.newEncrypt(pin)
 
@@ -103,7 +103,7 @@ object AccountToCashHelper {
             map["BANKACCOUNTID"] = account //Credit
             map["ACCOUNTID"] = account
             map["MOBILENUMBER"] = mobile
-            map["AGENTID"] = agentId
+            map["AGENTID"]=agentId
             map["TRXAMOUNT"] = amount
             map["TRXMPIN"] = Util.newEncrypt(pin)
             map["INFOFIELD3"] = "A2CRECEIVE"
@@ -156,7 +156,7 @@ object AccountToCashHelper {
             map["BANKACCOUNTID"] = account
             map["ACCOUNTID"] = account
             map["MOBILENUMBER"] = mobile
-            map["AGENTID"] = agentId
+            map["AGENTID"]=agentId
             map["TRXAMOUNT"] = amount
             map["TRXMPIN"] = Util.newEncrypt(pin)
 
@@ -206,7 +206,7 @@ object AccountToCashHelper {
             map["BANKACCOUNTID"] = account
             map["ACCOUNTID"] = account
             map["MOBILENUMBER"] = mobile
-            map["AGENTID"] = agentId
+            map["AGENTID"]=agentId
             map["TRXMPIN"] = Util.newEncrypt(pin)
 
             map["INFOFIELD1"] = otp

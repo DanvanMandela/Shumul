@@ -183,7 +183,7 @@ fun productFunc(
         map["AccountID"] = account
         map["BANKACCOUNTID"] = account
         map["MOBILENUMBER"] = mobile
-        map["AGENTID"] = agentId
+        map["AGENTID"]=agentId
         map["CALLTYPE"] = "B-"
         AppLogger.instance.appLog("ACCOUNT:OPENING:REQUEST", Gson().toJson(map))
         PayloadRequest(
@@ -273,7 +273,7 @@ fun workSectorFunc(
         map["AccountID"] = account
         map["BANKACCOUNTID"] = account
         map["MOBILENUMBER"] = mobile
-        map["AGENTID"] = agentId
+        map["AGENTID"]=agentId
         map["CALLTYPE"] = "O-"
         AppLogger.instance.appLog("ACCOUNT:OPENING:REQUEST", Gson().toJson(map))
         PayloadRequest(
@@ -327,7 +327,7 @@ fun accountOpeningFunc(
         map["INFOFIELD13"] = accountOpening.validation?.mobile
         map["INFOFIELD16"] = accountOpening.validation?.product?.get("id")
         map["INFOFIELD18"] = accountOpening.personal?.idType?.get("id")
-
+        map["AGENTID"]=agentId
         map["INFOFIELD15"] = accountOpening.more?.city
         map["INFOFIELD20"] = date["expires"]
         map["INFOFIELD21"] = accountOpening.more?.occupation
@@ -351,7 +351,7 @@ fun accountOpeningFunc(
         map["INFOFIELD43"] = officer.map { it.value }.joinToString("~") //Special officer
 
         map["MOBILENUMBER"] = mobile
-        map["AGENTID"] = agentId
+        
         map["CALLTYPE"] = "B-"
 
         AppLogger.instance.appLog("ACCOUNT:OPENING:REQUEST", Gson().toJson(map))

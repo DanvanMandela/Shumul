@@ -85,7 +85,7 @@ import remittancePay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DataPurchaseModule(data: GlobalData) {
+fun DataPurchaseModule(data: GlobalData,) {
     val navController = rememberNavController()
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection()) {
         Scaffold(topBar = {
@@ -129,7 +129,7 @@ fun DataPurchaseModule(data: GlobalData) {
                 )
                 NavHost(
                     navController = navController,
-                    startDestination = Module.Remittance.Agent.route
+                    startDestination = Module.DataPurchase.Agent.route
                 ) {
                     setComposable(route = Module.DataPurchase.Agent.route) {
                         BackHandler(enabled = true) {
@@ -137,16 +137,16 @@ fun DataPurchaseModule(data: GlobalData) {
                         }
                         DataPurchaseAgentModule(function = {
                             data.controller.navigateUp()
-                        })
+                        }, data = data)
                     }
 
-                    setComposable(route = Module.PayRemittance.Customer.route) {
+                    setComposable(route = Module.DataPurchase.Customer.route) {
                         BackHandler(enabled = true) {
                             data.controller.navigateUp()
                         }
                         DataPurchaseCustomerModule(function = {
                             data.controller.navigateUp()
-                        })
+                        }, data = data)
                     }
                 }
             }

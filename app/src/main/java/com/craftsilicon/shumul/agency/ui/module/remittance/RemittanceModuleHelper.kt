@@ -40,7 +40,7 @@ object RemittanceModuleHelper {
             map["AccountID"] = account
             map["BANKACCOUNTID"] = account
             map["MOBILENUMBER"] = mobile
-            map["AGENTID"] = agentId
+            map["AGENTID"]=agentId
             map["CALLTYPE"] = "O-"
             AppLogger.instance.appLog("ACCOUNT:OPENING:REQUEST", Gson().toJson(map))
             PayloadRequest(
@@ -133,7 +133,7 @@ object RemittanceModuleHelper {
             map["MOBILENUMBER"] = mobile
             map["INFOFIELD2"] = currency
             map["INFOFIELD1"] = amount
-            map["AGENTID"] = agentId
+            map["AGENTID"]=agentId
             map["FUNCTIONNAME"] = "GETNAME"
             map["CALLTYPE"] = "M-"
             AppLogger.instance.appLog("FEE:REQUEST", Gson().toJson(map))
@@ -173,7 +173,7 @@ object RemittanceModuleHelper {
             map["MOBILENUMBER"] = mobile
             map["BANKACCOUNTID"] = account
             map["MOBILENUMBER"] = mobile
-            map["AGENTID"] = agentId
+            map["AGENTID"]=agentId
             map["FUNCTIONNAME"] = "GETNAME"
             map["CALLTYPE"] = "M-"
             AppLogger.instance.appLog("FEE:REQUEST", Gson().toJson(map))
@@ -219,7 +219,7 @@ object RemittanceModuleHelper {
             map["MOBILENUMBER"] = mobile
             map["BANKACCOUNTID"] = account
             map["MOBILENUMBER"] = mobile
-            map["AGENTID"] = agentId
+            map["AGENTID"]=agentId
             map["FUNCTIONNAME"] = "GETNAME"
             map["CALLTYPE"] = "M-"
             map["AMOUNT"] = data["charge"]
@@ -258,7 +258,7 @@ object RemittanceModuleHelper {
         mobile: String,
         agentId: String,
         pin: String,
-        otp:String,
+        otp: String,
         model: RemoteViewModelImpl
     ): PayloadRequest? {
         return try {
@@ -278,7 +278,7 @@ object RemittanceModuleHelper {
             map["MOBILENUMBER"] = mobile
             map["BANKACCOUNTID"] = account
             map["MOBILENUMBER"] = mobile
-            map["AGENTID"] = agentId
+            map["AGENTID"]=agentId
             map["FUNCTIONNAME"] = "GETNAME"
             map["CALLTYPE"] = "M-"
             map["INFOFIELD1"] = data["amount"]
@@ -312,38 +312,6 @@ object RemittanceModuleHelper {
     }
 
 
-
-//    {
-//        "FormID": "VALIDATE",
-//        "SessionID": "ffffffff-e46c-53ce-0000-00001d093e12",
-//        "UNIQUEID": "26f41fd0-6698-11ef-96fe-19df6897fa8c",
-//        "BankID": "9981",
-//        "Country": "YEMENTEST",
-//        "VersionNumber": "1.0.6",
-//        "IMEI": "gzl6RdJjRM/wuCxnhwpLeYAqERDkPj2cN1psQCqGtjE=",
-//        "IMSI": "gzl6RdJjRM/wuCxnhwpLeYAqERDkPj2cN1psQCqGtjE=",
-//        "TRXSOURCE": "APP",
-//        "APPNAME": "SHUMUL",
-//        "CODEBASE": "ANDROID",
-//        "CustomerID": "3114515620",
-//        "LATLON": "0.00,0.00",
-//        "ModuleID": "PAYREMITTANCE",
-//        "MerchantID": "PAYREMITTANCE",
-//        "Validate": {
-//        "ACCOUNTID": "725412504",
-//        "INFOFIELD1": "1",---REMCURRANCY1
-//        "INFOFIELD2": "1",-----FEEID
-//        "INFOFIELD9": "100",
-//        "": "YER",
-//        "INFOFIELD3": "986532741",----SENDERRPHONE
-//        "INFOFIELD4": "9562384",----Receiver Phone no
-//        "INFOFIELD6": "p U s h",----sender name
-//        "INFOFIELD7": " k a t t",----receivername
-//        "INFOFIELD8": "test",----comments
-//        "INFOFIELD10": "010100003801"
-//    }
-//    }
-
     fun payRemittance(
         account: String,
         remittance: String,
@@ -368,10 +336,10 @@ object RemittanceModuleHelper {
 
 
             map["AccountID"] = remittance
+            map["AGENTID"]=agentId
             map["MOBILENUMBER"] = mobile
             map["BANKACCOUNTID"] = account
             map["MOBILENUMBER"] = mobile
-            map["AGENTID"] = agentId
             map["FUNCTIONNAME"] = "GETNAME"
             map["CALLTYPE"] = "M-"
             map["INFOFIELD1"] = data["currencyID"]?.toBigNumberDisplay()

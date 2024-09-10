@@ -16,8 +16,8 @@ android {
         applicationId = "com.craftsilicon.shumul.agency"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.1.3"
+        versionCode = 5
+        versionName = "1.1.5"
         multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

@@ -248,6 +248,7 @@ fun CashToCashRedeem(function: () -> Unit) {
                         Spacer(modifier = Modifier.size(horizontalModulePadding))
                         Button(
                             onClick = {
+                                val use = model.userState
                                 scope.launch {
                                     if (otp.isBlank()) {
                                         snackState.showSnackbar(
@@ -263,7 +264,7 @@ fun CashToCashRedeem(function: () -> Unit) {
                                                 path = "${model.deviceData?.agent}",
                                                 data = AccountToCashHelper.details(
                                                     account = "${agentAccount.value?.account}",
-                                                    mobile = "${user?.mobile}",
+                                                    mobile = "${use?.mobile}",
                                                     agentId = "${agentAccount.value?.agentID}",
                                                     pin = password,
                                                     model = model,
@@ -365,6 +366,7 @@ fun CashToCashRedeem(function: () -> Unit) {
             is Response.Confirm -> FundTransferConfirmDialog(
                 data = validationData.value!!,
                 action = { otp ->
+                    val use = model.userState
                     showDialog = false
                     action = {
                         model.web(
@@ -372,7 +374,7 @@ fun CashToCashRedeem(function: () -> Unit) {
                             data = CashToCashHelper.redeem(
                                 account = "${agentAccount.value?.account}",
                                 amount = "${validationData.value?.amount}",
-                                mobile = "${user?.mobile}",
+                                mobile = "${use?.mobile}",
                                 agentId = "${agentAccount.value?.agentID}",
                                 pin = password,
                                 model = model,

@@ -1,6 +1,5 @@
 package com.craftsilicon.shumul.agency.ui.module.remittance.pay
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -62,8 +60,8 @@ import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
 import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
-import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.module.ConfirmDialog
+import com.craftsilicon.shumul.agency.ui.module.ErrorDialog
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
@@ -75,11 +73,11 @@ import com.craftsilicon.shumul.agency.ui.module.toHashMap
 import com.craftsilicon.shumul.agency.ui.module.validation.ValidationHelper
 import com.craftsilicon.shumul.agency.ui.module.validation.ValidationModuleResponse
 import com.craftsilicon.shumul.agency.ui.module.validation.validationFunc
-import com.craftsilicon.shumul.agency.ui.module.withdrawal.WithdrawalModuleHelper.otpTransactionAgent
+import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
+import com.craftsilicon.shumul.agency.ui.navigation.Module
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
-import com.craftsilicon.shumul.agency.ui.util.countryCode
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
 import com.craftsilicon.shumul.agency.ui.util.layoutDirection
 import com.google.gson.internal.LinkedTreeMap
@@ -87,18 +85,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun PayCustomerRemittance(function: () -> Unit) {
+fun PayCustomerRemittance(function: () -> Unit,data: GlobalData) {
     val context = LocalContext.current
     val work = hiltViewModel<WorkViewModel>()
     val owner = LocalLifecycleOwner.current
     val model: RemoteViewModelImpl = hiltViewModel()
     val snackState = remember { SnackbarHostState() }
     var screenState: ModuleState by remember {
-        mutableStateOf(ModuleState.DISPLAY)
+        mutableStateOf(ModuleState.LOADING)
     }
     val user = model.preferences.userData.collectAsState().value
     val scope = rememberCoroutineScope()
-
 
 
     var account by rememberSaveable {
@@ -109,9 +106,7 @@ fun PayCustomerRemittance(function: () -> Unit) {
         mutableStateOf("")
     }
 
-    var currencyId by rememberSaveable {
-        mutableStateOf("")
-    }
+
 
     val validationData: MutableState<ValidationBean?> = remember {
         mutableStateOf(null)
@@ -124,6 +119,10 @@ fun PayCustomerRemittance(function: () -> Unit) {
         mutableStateOf("")
     }
 
+    var remittanceRead by rememberSaveable {
+        mutableStateOf(false)
+    }
+
 
     val currenciesData = local.currency.collectAsState().value
 
@@ -133,6 +132,10 @@ fun PayCustomerRemittance(function: () -> Unit) {
     }
 
     var showDialog by remember { mutableStateOf(false) }
+
+
+    var showErrorDialog by remember { mutableStateOf(false) }
+
 
 
     var passwordVisibility by remember { mutableStateOf(false) }
@@ -151,12 +154,14 @@ fun PayCustomerRemittance(function: () -> Unit) {
         LaunchedEffect(key1 = Unit) {
             delay(600)
             action = {
+                val use = model.userState
+                val stateAccount = use?.account?.first()
                 model.web(
                     path = "${model.deviceData?.agent}",
                     data = RemittanceModuleHelper.currency(
-                        account = "${user?.account?.lastOrNull()?.account}",
-                        mobile = "${appUser?.mobile}",
-                        agentId = "${appUser?.agent}",
+                        account = "${stateAccount?.account}",
+                        mobile = "${use?.mobile}",
+                        agentId = "${stateAccount?.agentID}",
                         model = model,
                         context = context
                     )!!,
@@ -180,19 +185,7 @@ fun PayCustomerRemittance(function: () -> Unit) {
                                     delay(200)
                                 }
                             }, onToken = {
-                                work.routeData(owner, object :
-                                    WorkStatus {
-                                    override fun workDone(b: Boolean) {
-                                        if (b) action.invoke()
-                                    }
-
-                                    override fun progress(p: Int) {
-                                        AppLogger.instance.appLog(
-                                            "DATA:Progress",
-                                            "$p"
-                                        )
-                                    }
-                                })
+                                showErrorDialog=true
                             }
                         )
                     }
@@ -267,6 +260,7 @@ fun PayCustomerRemittance(function: () -> Unit) {
                                 fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
                                 fontSize = MaterialTheme.typography.labelLarge.fontSize
                             ),
+                            readOnly = remittanceRead,
                             keyboardOptions = KeyboardOptions(
                                 imeAction = ImeAction.Next,
                                 keyboardType = KeyboardType.Text
@@ -320,6 +314,8 @@ fun PayCustomerRemittance(function: () -> Unit) {
                         Spacer(modifier = Modifier.size(horizontalModulePadding))
                         Button(
                             onClick = {
+                                val use = model.userState
+                                val stateAccount = use?.account?.first()
                                 scope.launch {
                                     if (account.isBlank()) {
                                         snackState.showSnackbar(
@@ -329,7 +325,7 @@ fun PayCustomerRemittance(function: () -> Unit) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_receiver_name_)
                                         )
-                                    }  else if (password.isBlank()) {
+                                    } else if (password.isBlank()) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_pin_)
                                         )
@@ -339,8 +335,8 @@ fun PayCustomerRemittance(function: () -> Unit) {
                                                 path = "${model.deviceData?.agent}",
                                                 data = validationFunc(
                                                     account = account,
-                                                    mobile = "${appUser?.mobile}",
-                                                    agentId = "${appUser?.agent}",
+                                                    mobile = "${use?.mobile}",
+                                                    agentId = "${stateAccount?.agentID}",
                                                     model = model,
                                                     context = context
                                                 )!!,
@@ -363,8 +359,8 @@ fun PayCustomerRemittance(function: () -> Unit) {
                                                                     path = "${model.deviceData?.agent}",
                                                                     data = RemittanceModuleHelper.search(
                                                                         account = remittanceValue,
-                                                                        agentId = "${appUser?.agent}",
-                                                                        mobile = "${appUser?.mobile}",
+                                                                        agentId = "${stateAccount?.agentID}",
+                                                                        mobile = "${use?.mobile}",
                                                                         context = context,
                                                                         model = model
                                                                     )!!,
@@ -398,6 +394,11 @@ fun PayCustomerRemittance(function: () -> Unit) {
                                                                                     ).sumOf()
                                                                                 moduleCall =
                                                                                     Response.Confirm
+                                                                                val curr =
+                                                                                    currenciesData.find {
+                                                                                        it.id ==
+                                                                                                "${map["remittanceCurrancyId"]}".toBigNumberDisplay()
+                                                                                    }?.description
                                                                                 validationData.value =
                                                                                     accountValidation?.apply {
                                                                                         isOtp =
@@ -425,22 +426,15 @@ fun PayCustomerRemittance(function: () -> Unit) {
                                                                                                 )
                                                                                                         to "${map["receiverMobile"] ?: 0}".toBigNumberDisplay(),
                                                                                                 context.getString(
-                                                                                                    R.string.fee_amount_
+                                                                                                    R.string.currency_
                                                                                                 )
-                                                                                                        to hashMapOf(
-                                                                                                    "A" to map["agentFee"],
-                                                                                                    "B" to map["networkFee"],
-                                                                                                    "C" to map["destinationFee"]
-                                                                                                ).sumOf(),
+                                                                                                        to curr,
                                                                                                 context.getString(
                                                                                                     R.string.amount_
                                                                                                 )
                                                                                                         to "${map["amount"] ?: 0}".toBigNumberDisplay(),
-                                                                                                context.getString(
-                                                                                                    R.string.total_amount_
+
                                                                                                 )
-                                                                                                        to totalAmount,
-                                                                                            )
                                                                                         extra =
                                                                                             map.toHashMap()
                                                                                         this.amount =
@@ -448,25 +442,7 @@ fun PayCustomerRemittance(function: () -> Unit) {
                                                                                     }
                                                                                 showDialog = true
                                                                             }, onToken = {
-                                                                                work.routeData(
-                                                                                    owner,
-                                                                                    object :
-                                                                                        WorkStatus {
-                                                                                        override fun workDone(
-                                                                                            b: Boolean
-                                                                                        ) {
-                                                                                            if (b) action.invoke()
-                                                                                        }
-
-                                                                                        override fun progress(
-                                                                                            p: Int
-                                                                                        ) {
-                                                                                            AppLogger.instance.appLog(
-                                                                                                "DATA:Progress",
-                                                                                                "$p"
-                                                                                            )
-                                                                                        }
-                                                                                    })
+                                                                                showErrorDialog=true
                                                                             }
                                                                         )
                                                                     }
@@ -474,19 +450,7 @@ fun PayCustomerRemittance(function: () -> Unit) {
                                                             }
                                                             action.invoke()
                                                         }, onToken = {
-                                                            work.routeData(owner, object :
-                                                                WorkStatus {
-                                                                override fun workDone(b: Boolean) {
-                                                                    if (b) action.invoke()
-                                                                }
-
-                                                                override fun progress(p: Int) {
-                                                                    AppLogger.instance.appLog(
-                                                                        "DATA:Progress",
-                                                                        "$p"
-                                                                    )
-                                                                }
-                                                            })
+                                                            showErrorDialog=true
                                                         }
                                                     )
                                                 }
@@ -529,6 +493,12 @@ fun PayCustomerRemittance(function: () -> Unit) {
         }
 
 
+        if (showErrorDialog) ErrorDialog(message = stringResource(id = R.string.session_expired_login_)) {
+            showErrorDialog = false
+            data.controller.navigate(Module.Splash.route)
+        }
+
+
 
         if (showDialog) when (val s = moduleCall) {
             is Response.Success -> SuccessDialog(
@@ -544,6 +514,8 @@ fun PayCustomerRemittance(function: () -> Unit) {
                 action = {
                     showDialog = false
                     action = {
+                        val use = model.userState
+                        val stateAccount = use?.account?.first()
                         val map = validationData.value!!.extra
                         val curr = "${map["remittanceCurrancyId"]}".toBigNumberDisplay()
                         if (currenciesData.find { it.id == curr }?.description == validationData.value?.currency)
@@ -552,8 +524,8 @@ fun PayCustomerRemittance(function: () -> Unit) {
                                 data = RemittanceModuleHelper.payRemittance(
                                     account = account,
                                     remittance = remittanceValue,
-                                    mobile = "${appUser?.mobile}",
-                                    agentId = "${appUser?.agent}",
+                                    mobile = "${use?.mobile}",
+                                    agentId = "${stateAccount?.agentID}",
                                     pin = password,
                                     model = model,
                                     context = context,
@@ -592,9 +564,7 @@ fun PayCustomerRemittance(function: () -> Unit) {
                                             )
                                             val referenceValue = convertedData["BatchID"]
                                                 ?: convertedData["referance"]
-                                            val numberAsLong =
-                                                (referenceValue as? Number)?.toLong() ?: 0L
-                                            Log.e("hope", "$numberAsLong")
+
                                             moduleCall = Response.Success(
                                                 data = hashMapOf(
                                                     "message" to message.message,
@@ -604,19 +574,7 @@ fun PayCustomerRemittance(function: () -> Unit) {
                                             screenState = ModuleState.DISPLAY
                                             showDialog = true
                                         }, onToken = {
-                                            work.routeData(owner, object :
-                                                WorkStatus {
-                                                override fun workDone(b: Boolean) {
-                                                    if (b) action.invoke()
-                                                }
-
-                                                override fun progress(p: Int) {
-                                                    AppLogger.instance.appLog(
-                                                        "DATA:Progress",
-                                                        "$p"
-                                                    )
-                                                }
-                                            })
+                                            showErrorDialog=true
                                         }
                                     )
                                 }

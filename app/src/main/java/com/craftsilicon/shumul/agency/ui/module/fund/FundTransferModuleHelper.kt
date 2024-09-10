@@ -93,7 +93,7 @@ fun fundTransferFunc(
         map["ACCOUNTID"] = toAccount
         map["BANKACCOUNTID"] = fromAccount
         map["MOBILENUMBER"] = mobile
-        map["AGENTID"] = agentId
+        map["AGENTID"]=agentId
         map["TRXAMOUNT"] = amount
         map["TRXOTP"] = otp
         map["INFOFIELD1"] = narration

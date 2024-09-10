@@ -14,6 +14,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
@@ -21,6 +23,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.craftsilicon.shumul.agency.R
 import com.google.gson.internal.LinkedTreeMap
 import java.util.Locale
@@ -123,3 +128,88 @@ fun LinkedTreeMap<*, *>.toHashMap(): HashMap<String, Any?> {
     }
     return hashMap
 }
+
+
+@Composable
+fun ErrorDialog(
+    message: String,
+    action: () -> Unit
+) {
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(
+            R.raw.alert
+        )
+    )
+    Dialog(onDismissRequest = { action() }) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .wrapContentSize(),
+            shape = RoundedCornerShape(8.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.size(ButtonDefaults.IconSize))
+                LottieAnimation(
+                    composition = composition,
+                    modifier = Modifier
+                        .size(80.dp)
+                )
+                Spacer(modifier = Modifier.size(ButtonDefaults.IconSize))
+                Text(
+                    text = stringResource(id = R.string.alert_),
+                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.size(ButtonDefaults.IconSize))
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                )
+                Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
+                Text(
+                    text = message,
+                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                )
+                Spacer(modifier = Modifier.size(ButtonDefaults.IconSize))
+                Button(
+                    onClick = { action() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.close_),
+                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+        }
+    }
+}
+

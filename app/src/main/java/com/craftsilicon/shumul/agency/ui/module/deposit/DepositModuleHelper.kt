@@ -92,7 +92,7 @@ fun depositFunc(
         map["ACCOUNTID"] = fromAccount
         map["BANKACCOUNTID"] = toAccount
         map["MOBILENUMBER"] = mobile
-        map["AGENTID"] = agentId
+        map["AGENTID"]=agentId
         map["TRXAMOUNT"] = amount
         map["TRXMPIN"] = Util.newEncrypt(pin)
         map["INFOFIELD1"] = narration

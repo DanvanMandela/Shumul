@@ -61,6 +61,7 @@ import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
 import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
 import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
+import com.craftsilicon.shumul.agency.ui.module.ErrorDialog
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
@@ -69,6 +70,7 @@ import com.craftsilicon.shumul.agency.ui.module.validation.validationFunc
 import com.craftsilicon.shumul.agency.ui.module.withdrawal.otpTransactionCompleteFunc
 import com.craftsilicon.shumul.agency.ui.module.withdrawal.otpTransactionFunc
 import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
+import com.craftsilicon.shumul.agency.ui.navigation.Module
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
@@ -105,6 +107,8 @@ fun FundTransferModule(data: GlobalData) {
     var narration by rememberSaveable {
         mutableStateOf("")
     }
+
+    var showErrorDialog by remember { mutableStateOf(false) }
 
 
     var amount by rememberSaveable {
@@ -329,6 +333,8 @@ fun FundTransferModule(data: GlobalData) {
                             Spacer(modifier = Modifier.size(horizontalModulePadding))
                             Button(
                                 onClick = {
+                                    val use = model.userState
+                                    val stateAccount = use?.account?.first()
                                     scope.launch {
                                         if (account.isBlank()) {
                                             snackState.showSnackbar(
@@ -356,8 +362,8 @@ fun FundTransferModule(data: GlobalData) {
                                                     path = "${model.deviceData?.agent}",
                                                     data = validationFunc(
                                                         account = account,
-                                                        mobile = "${user?.mobile}",
-                                                        agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                                        mobile = "${use?.mobile}",
+                                                        agentId = "${stateAccount?.agentID}",
                                                         model = model,
                                                         context = context
                                                     )!!,
@@ -382,9 +388,9 @@ fun FundTransferModule(data: GlobalData) {
                                                                             toAccount = toAccount,
                                                                             fromAccount = account,
                                                                             amount = amount,
-                                                                            mobile = "${user?.mobile}",
+                                                                            mobile = "${use?.mobile}",
                                                                             narration = narration,
-                                                                            agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                                                            agentId = "${stateAccount?.agentID}",
                                                                             pin = password,
                                                                             model = model,
                                                                             context = context
@@ -424,19 +430,8 @@ fun FundTransferModule(data: GlobalData) {
                                                                                     showDialog =
                                                                                         true
                                                                                 }, onToken = {
-                                                                                    work.routeData(owner, object :
-                                                                                        WorkStatus {
-                                                                                        override fun workDone(b: Boolean) {
-                                                                                            if (b) action.invoke()
-                                                                                        }
-
-                                                                                        override fun progress(p: Int) {
-                                                                                            AppLogger.instance.appLog(
-                                                                                                "DATA:Progress",
-                                                                                                "$p"
-                                                                                            )
-                                                                                        }
-                                                                                    })
+                                                                                    showErrorDialog =
+                                                                                        true
                                                                                 }
                                                                             )
                                                                         }
@@ -444,19 +439,7 @@ fun FundTransferModule(data: GlobalData) {
                                                                 }
                                                                 action.invoke()
                                                             }, onToken = {
-                                                                work.routeData(owner, object :
-                                                                    WorkStatus {
-                                                                    override fun workDone(b: Boolean) {
-                                                                        if (b) action.invoke()
-                                                                    }
-
-                                                                    override fun progress(p: Int) {
-                                                                        AppLogger.instance.appLog(
-                                                                            "DATA:Progress",
-                                                                            "$p"
-                                                                        )
-                                                                    }
-                                                                })
+                                                                showErrorDialog = true
                                                             }
                                                         )
                                                     }
@@ -511,6 +494,8 @@ fun FundTransferModule(data: GlobalData) {
             is Response.Confirm -> FundTransferConfirmDialog(
                 data = validationData.value!!,
                 action = { otp ->
+                    val use = model.userState
+                    val stateAccount = use?.account?.first()
                     showDialog = false
                     action = {
                         model.web(
@@ -519,9 +504,9 @@ fun FundTransferModule(data: GlobalData) {
                                 toAccount = toAccount,
                                 fromAccount = account,
                                 amount = amount,
-                                mobile = "${user?.mobile}",
+                                mobile = "${use?.mobile}",
                                 narration = "${validationData.value?.traceNo}",
-                                agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                agentId = "${stateAccount?.agentID}",
                                 pin = password,
                                 model = model,
                                 otp = otp,
@@ -554,19 +539,7 @@ fun FundTransferModule(data: GlobalData) {
                                         screenState = ModuleState.DISPLAY
                                         showDialog = true
                                     }, onToken = {
-                                        work.routeData(owner, object :
-                                            WorkStatus {
-                                            override fun workDone(b: Boolean) {
-                                                if (b) action.invoke()
-                                            }
-
-                                            override fun progress(p: Int) {
-                                                AppLogger.instance.appLog(
-                                                    "DATA:Progress",
-                                                    "$p"
-                                                )
-                                            }
-                                        })
+                                        showErrorDialog = true
                                     }
                                 )
                             }
@@ -578,5 +551,8 @@ fun FundTransferModule(data: GlobalData) {
         }
     }
 
-
+    if (showErrorDialog) ErrorDialog(message = stringResource(id = R.string.session_expired_login_)) {
+        showErrorDialog = false
+        data.controller.navigate(Module.Splash.route)
+    }
 }

@@ -279,6 +279,8 @@ fun DataPurchaseSubscribeModule(data: GlobalData) {
                             Spacer(modifier = Modifier.size(horizontalModulePadding))
                             Button(
                                 onClick = {
+                                    val use = model.userState
+                                    val stateAccount = use?.account?.first()
                                     scope.launch {
                                         if (subscription.isEmpty()) {
                                             snackState.showSnackbar(
@@ -306,9 +308,9 @@ fun DataPurchaseSubscribeModule(data: GlobalData) {
                                                     path = "${model.deviceData?.agent}",
                                                     data = balanceFunc(
                                                         account = "${account["account"]}",
-                                                        fromAccount = "${user?.account?.firstOrNull()?.account}",
-                                                        mobile = "${user?.mobile}",
-                                                        agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                                        fromAccount = "${stateAccount?.account}",
+                                                        mobile = "${use?.mobile}",
+                                                        agentId = "${stateAccount?.agentID}",
                                                         model = model,
                                                         context = context,
                                                         pin = password

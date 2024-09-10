@@ -61,10 +61,10 @@ object CashToCashHelper {
 
             map["ACCOUNTID"] = fromAccount //Debit
             map["BANKACCOUNTID"] = fromAccount //Credit
-
+            map["AGENTID"]=agentId
             map["MOBILENUMBER"] = mobile
             map["PHONENUMBER"] = mobile
-            map["AGENTID"] = agentId
+            
             map["TRXAMOUNT"] = amount
             map["TRXMPIN"] = Util.newEncrypt(pin)
 
@@ -134,9 +134,9 @@ object CashToCashHelper {
 
             map["ACCOUNTID"] = account //Debit
             map["BANKACCOUNTID"] = account //Credit
-
+            map["AGENTID"]=agentId
             map["MOBILENUMBER"] = mobile
-            map["AGENTID"] = agentId
+            
             map["TRXAMOUNT"] = amount
             map["TRXMPIN"] = Util.newEncrypt(pin)
 

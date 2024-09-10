@@ -89,7 +89,7 @@ fun PayRemittanceModule(data: GlobalData) {
                         }
                         PayRemittanceAgent(function = {
                             data.controller.navigateUp()
-                        })
+                        }, data = data)
                     }
 
                     setComposable(route = Module.PayRemittance.Customer.route) {
@@ -98,7 +98,7 @@ fun PayRemittanceModule(data: GlobalData) {
                         }
                         PayCustomerRemittance(function = {
                             data.controller.navigateUp()
-                        })
+                        }, data = data)
                     }
                 }
             }

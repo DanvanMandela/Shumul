@@ -64,9 +64,11 @@ import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
+import com.craftsilicon.shumul.agency.ui.module.ErrorDialog
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
 import com.craftsilicon.shumul.agency.ui.module.dashboard.balance.BalanceModuleResponse
 import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
+import com.craftsilicon.shumul.agency.ui.navigation.Module
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.navigation.NavigateDialog
 import com.craftsilicon.shumul.agency.ui.navigation.NavigationType
@@ -117,6 +119,11 @@ fun AirtimeModule(data: GlobalData) {
         mutableStateOf(model.preferences.appUserState.value)
     }
 
+    var narration by rememberSaveable {
+        mutableStateOf("")
+    }
+
+
     val user = model.preferences.userData.collectAsState().value
     val mnoData = remember { SnapshotStateList<DropDownResult>() }
 
@@ -129,6 +136,8 @@ fun AirtimeModule(data: GlobalData) {
 
     var showDialog by remember { mutableStateOf(false) }
 
+    var showErrorDialog by remember { mutableStateOf(false) }
+
 
     var passwordVisibility by remember { mutableStateOf(false) }
 
@@ -139,12 +148,13 @@ fun AirtimeModule(data: GlobalData) {
 
     LaunchedEffect(key1 = Unit) {
         user?.account?.forEach {
-            agentAccounts.add(
-                DropDownResult(
-                    key = it.account,
-                    desc = it.account
+            if (it.currency?.lowercase() == "YER".lowercase())
+                agentAccounts.add(
+                    DropDownResult(
+                        key = it.account,
+                        desc = it.account
+                    )
                 )
-            )
         }
     }
 
@@ -152,7 +162,7 @@ fun AirtimeModule(data: GlobalData) {
         staticData.forEach {
             mnoData.add(
                 DropDownResult(
-                    key = it.id,
+                    key = it.airTime,
                     desc = it.description
                 )
             )
@@ -164,12 +174,14 @@ fun AirtimeModule(data: GlobalData) {
         LaunchedEffect(key1 = Unit) {
             delay(600)
             action = {
+                val use = model.userState
+                val stateAccount = use?.account?.first()
                 model.web(
                     path = "${model.deviceData?.agent}",
                     data = mnoData(
-                        account = "${user?.account?.singleOrNull()?.account}",
-                        mobile = "${appUser?.mobile}",
-                        agentId = "${appUser?.agent}",
+                        account = "${stateAccount?.account}",
+                        mobile = "${use?.mobile}",
+                        agentId = "${stateAccount?.agentID}",
                         model = model,
                         context = context
                     )!!,
@@ -193,19 +205,7 @@ fun AirtimeModule(data: GlobalData) {
                                     delay(200)
                                 }
                             }, onToken = {
-                                work.routeData(owner, object :
-                                    WorkStatus {
-                                    override fun workDone(b: Boolean) {
-                                        if (b) action.invoke()
-                                    }
-
-                                    override fun progress(p: Int) {
-                                        AppLogger.instance.appLog(
-                                            "DATA:Progress",
-                                            "$p"
-                                        )
-                                    }
-                                })
+                                showErrorDialog = true
                             }
                         )
                     }
@@ -350,6 +350,29 @@ fun AirtimeModule(data: GlobalData) {
                             )
                             Spacer(modifier = Modifier.size(16.dp))
                             OutlinedTextField(
+                                value = narration,
+                                onValueChange = { narration = it },
+                                label = {
+                                    Text(
+                                        text = stringResource(id = R.string.narration_),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontFamily = FontFamily(Font(R.font.montserrat_medium))
+                                    )
+                                }, modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = horizontalModulePadding),
+                                textStyle = TextStyle(
+                                    fontStyle = MaterialTheme.typography.labelLarge.fontStyle,
+                                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                                    fontSize = MaterialTheme.typography.labelLarge.fontSize
+                                ),
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Next,
+                                    keyboardType = KeyboardType.Text
+                                )
+                            )
+                            Spacer(modifier = Modifier.size(16.dp))
+                            OutlinedTextField(
                                 value = password,
                                 onValueChange = { password = it },
                                 label = {
@@ -396,6 +419,8 @@ fun AirtimeModule(data: GlobalData) {
                             Spacer(modifier = Modifier.size(horizontalModulePadding))
                             Button(
                                 onClick = {
+                                    val use = model.userState
+                                    val stateAccount = use?.account?.first()
                                     scope.launch {
                                         if (mno.isEmpty()) {
                                             snackState.showSnackbar(
@@ -421,14 +446,16 @@ fun AirtimeModule(data: GlobalData) {
                                             action = {
                                                 model.web(
                                                     path = "${model.deviceData?.agent}",
-                                                    data = airtimeValidate(
-                                                        account = "${user?.account?.singleOrNull()?.account}",
+                                                    data = airtimeFuc(
+                                                        account = account,
                                                         mno = mno,
-                                                        mobile = "${appUser?.mobile}",
-                                                        agentId = "${appUser?.agent}",
+                                                        mobile = mobile,
+                                                        agentId = "${stateAccount?.agentID}",
                                                         model = model,
                                                         context = context,
-                                                        pin = password
+                                                        pin = password,
+                                                        amount = amount,
+                                                        narration = narration
                                                     )!!,
                                                     state = { screenState = it },
                                                     onResponse = { response ->
@@ -454,23 +481,97 @@ fun AirtimeModule(data: GlobalData) {
                                                                     showDialog = true
                                                                 }
                                                             }, onToken = {
-                                                                work.routeData(owner, object :
-                                                                    WorkStatus {
-                                                                    override fun workDone(b: Boolean) {
-                                                                        if (b) action.invoke()
-                                                                    }
-
-                                                                    override fun progress(p: Int) {
-                                                                        AppLogger.instance.appLog(
-                                                                            "DATA:Progress",
-                                                                            "$p"
-                                                                        )
-                                                                    }
-                                                                })
+                                                                showErrorDialog = true
                                                             }
                                                         )
                                                     }
                                                 )
+
+//                                                if (mno != "YEMENMOBILE")
+//                                                    model.web(
+//                                                        path = "${model.deviceData?.agent}",
+//                                                        data = airtimeFuc(
+//                                                            account = "${user?.account?.singleOrNull()?.account}",
+//                                                            mno = "7",
+//                                                            mobile = "773414125",
+//                                                            agentId = "${appUser?.agent}",
+//                                                            model = model,
+//                                                            context = context,
+//                                                            pin = password,
+//                                                            amount = amount,
+//                                                            narration = ""
+//                                                        )!!,
+//                                                        state = { screenState = it },
+//                                                        onResponse = { response ->
+//                                                            BalanceModuleResponse(
+//                                                                response = response,
+//                                                                model = model,
+//                                                                onError = { error ->
+//                                                                    screenState = ModuleState.ERROR
+//                                                                    scope.launch {
+//                                                                        snackState.showSnackbar(
+//                                                                            message = "$error"
+//                                                                        )
+//                                                                    }
+//                                                                },
+//                                                                onSuccess = { message ->
+//                                                                    scope.launch {
+//                                                                        screenState =
+//                                                                            ModuleState.DISPLAY
+//                                                                        delay(200)
+//                                                                        navType = NavigateDialog
+//                                                                            .Balance
+//                                                                            .OnBalance(message!!)
+//                                                                        showDialog = true
+//                                                                    }
+//                                                                }, onToken = {
+//                                                                    showErrorDialog = true
+//                                                                }
+//                                                            )
+//                                                        }
+//                                                    )
+//                                                else
+//                                                    model.web(
+//                                                        path = "${model.deviceData?.agent}",
+//                                                        data = airtimeValidate(
+//                                                            account = "${user?.account?.singleOrNull()?.account}",
+//                                                            mno = "1",
+//                                                            mobile = mobile,
+//                                                            agentId = "${appUser?.agent}",
+//                                                            model = model,
+//                                                            context = context,
+//                                                            pin = password
+//                                                        )!!,
+//                                                        state = { screenState = it },
+//                                                        onResponse = { response ->
+//                                                            BalanceModuleResponse(
+//                                                                response = response,
+//                                                                model = model,
+//                                                                onError = { error ->
+//                                                                    screenState =
+//                                                                        ModuleState.ERROR
+//                                                                    scope.launch {
+//                                                                        snackState.showSnackbar(
+//                                                                            message = "$error"
+//                                                                        )
+//                                                                    }
+//                                                                },
+//                                                                onSuccess = { message ->
+//                                                                    scope.launch {
+//                                                                        screenState =
+//                                                                            ModuleState.DISPLAY
+//                                                                        delay(200)
+//                                                                        navType = NavigateDialog
+//                                                                            .Balance
+//                                                                            .OnBalance(message!!)
+//                                                                        showDialog = true
+//                                                                    }
+//                                                                }, onToken = {
+//                                                                    showErrorDialog = true
+//                                                                }
+//                                                            )
+//                                                        }
+//                                                    )
                                             }
                                             action.invoke()
                                         }
@@ -523,6 +624,11 @@ fun AirtimeModule(data: GlobalData) {
             }
 
             else -> throw Exception("Not implemented")
+        }
+
+        if (showErrorDialog) ErrorDialog(message = stringResource(id = R.string.session_expired_login_)) {
+            showErrorDialog = false
+            data.controller.navigate(Module.Splash.route)
         }
 
     }

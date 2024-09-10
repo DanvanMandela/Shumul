@@ -31,8 +31,7 @@ class SharedPreferencesStorage @Inject constructor(
     private val image: ImageHolderTypeConverter,
     private val appUser: AppUserStateTypeConverter,
     @ApplicationContext context: Context,
-) :
-    StorageDataSource {
+) : StorageDataSource {
 
     override val sharedPreferences: SharedPreferences =
         context.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE)

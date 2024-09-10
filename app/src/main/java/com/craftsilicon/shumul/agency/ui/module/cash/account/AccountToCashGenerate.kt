@@ -327,6 +327,8 @@ fun AccountToCashGenerate(function: () -> Unit) {
                         Spacer(modifier = Modifier.size(horizontalModulePadding))
                         Button(
                             onClick = {
+                                val use = model.userState
+                                val stateAccount = use?.account?.first()
                                 scope.launch {
                                     if (account.isBlank()) {
                                         snackState.showSnackbar(
@@ -358,9 +360,9 @@ fun AccountToCashGenerate(function: () -> Unit) {
                                                     to = receiverMobile,
                                                     toName = receiverName,
                                                     amount = amount,
-                                                    mobile = "${user?.mobile}",
+                                                    mobile = "${use?.mobile}",
                                                     narration = receiverName,
-                                                    agentId = "${user?.account?.first()?.agentID}",
+                                                    agentId = "${stateAccount?.agentID}",
                                                     pin = password,
                                                     model = model,
                                                     context = context

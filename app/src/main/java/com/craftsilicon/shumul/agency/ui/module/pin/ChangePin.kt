@@ -294,6 +294,8 @@ fun ChangePin(data: GlobalData) {
                             Spacer(modifier = Modifier.size(horizontalModulePadding))
                             Button(
                                 onClick = {
+                                    val use = model.userState
+                                    val stateAccount = use?.account?.first()
                                     scope.launch {
                                         if (passwordOld.isBlank()) {
                                             snackState.showSnackbar(
@@ -317,6 +319,7 @@ fun ChangePin(data: GlobalData) {
                                             )
                                         } else {
                                             action = {
+
                                                 model.web(
                                                     path = "${model.deviceData?.agent}",
                                                     data = changePin(
@@ -324,9 +327,9 @@ fun ChangePin(data: GlobalData) {
                                                             "new" to passwordNew,
                                                             "old" to passwordOld
                                                         ),
-                                                        account = "${user?.account?.firstOrNull()?.account}",
-                                                        mobile = "${user?.mobile}",
-                                                        agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                                        account = "${stateAccount?.account}",
+                                                        mobile = "${use?.mobile}",
+                                                        agentId = "${stateAccount?.agentID}",
                                                         model = model,
                                                         context = context
                                                     )!!,

@@ -2,6 +2,8 @@ package com.craftsilicon.shumul.agency.data.source.model
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import com.craftsilicon.shumul.agency.data.source.repo.route.work.RouteDataWorker
 import com.craftsilicon.shumul.agency.data.source.storage.pref.StorageDataSource
@@ -22,19 +24,21 @@ class WorkViewModel @Inject constructor(
 
     fun routeData(owner: LifecycleOwner, status: WorkStatus) {
         val routeWorker = OneTimeWorkRequestBuilder<RouteDataWorker>()
-            .addTag(WorkerCommons.TAG_OUTPUT)
-            .build()
-        worker.getWorkManger().enqueue(routeWorker)
-        AppLogger.instance.appLog("workInfo:id", Gson().toJson(routeWorker.id))
-        worker.getWorkManger().getWorkInfoByIdLiveData(routeWorker.id)
-            .observe(owner) { workInfo ->
-                if (workInfo != null) {
-                    val output = workInfo.outputData
-                    val value = output.getBoolean(IS_WORK_DONE, false)
-                    AppLogger.instance.appLog("workInfo:value", Gson().toJson(value))
-                    status.workDone(value)
-                }
+        val continuation = worker.getWorkManger()
+            .beginUniqueWork(
+                WorkerCommons.TAG_DATA_WORKER,
+                ExistingWorkPolicy.REPLACE,
+                routeWorker.build()
+            )
+        continuation.enqueue()
+        continuation.workInfosLiveData.observe(owner) { workInfo ->
+            if (!workInfo.isNullOrEmpty()) {
+                val output = workInfo[0].outputData
+                val value = output.getBoolean(IS_WORK_DONE, false)
+                AppLogger.instance.appLog("workInfo:value", Gson().toJson(value))
+                status.workDone(value)
             }
+        }
     }
 
 }

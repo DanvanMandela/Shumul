@@ -86,7 +86,7 @@ fun miniFunc(
         val iv = model.deviceData!!.run
         val device = model.deviceData!!.device
         val uniqueID = getUniqueID()
-        val unique=model.preferences.uniqueID.value
+        val unique = model.preferences.uniqueID.value
         val map = APP.data(
             context = context,
             storage = model.preferences,
@@ -96,7 +96,7 @@ fun miniFunc(
         map["AccountID"] = account
         map["BANKACCOUNTID"] = account
         map["MOBILENUMBER"] = mobile
-        map["AGENTID"] = agentId
+        map["AGENTID"]=agentId
         map["TRXPIN"] = Util.newEncrypt(pin)
         map["CALLTYPE"] = "B-"
         AppLogger.instance.appLog("MINI:REQUEST", Gson().toJson(map))
@@ -129,7 +129,7 @@ fun fullFunc(
         val iv = model.deviceData!!.run
         val device = model.deviceData!!.device
         val uniqueID = getUniqueID()
-        val unique=model.preferences.uniqueID.value
+        val unique = model.preferences.uniqueID.value
         val map = APP.data(
             context = context,
             storage = model.preferences,

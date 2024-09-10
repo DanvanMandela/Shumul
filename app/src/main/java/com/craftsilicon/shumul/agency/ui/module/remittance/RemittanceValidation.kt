@@ -198,6 +198,7 @@ fun RemittanceValidation(
                             Spacer(modifier = Modifier.size(horizontalModulePadding))
                             Button(
                                 onClick = {
+                                    val use = model.userState
                                     scope.launch {
                                         if (agentAccount.value == null) {
                                             snackState.showSnackbar(
@@ -213,7 +214,7 @@ fun RemittanceValidation(
                                                     path = "${model.deviceData?.agent}",
                                                     data = validationFunc(
                                                         account = account,
-                                                        mobile = "${user?.mobile}",
+                                                        mobile = "${use?.mobile}",
                                                         agentId = "${agentAccount.value?.agentID}",
                                                         model = model,
                                                         context = context
@@ -297,6 +298,7 @@ fun RemittanceValidation(
             Response.Confirm -> DepositConfirmDialog(
                 data = validationData.value!!,
                 action = {
+                    val use = model.userState
                     showDialog = false
                     action = {
                         model.web(
@@ -305,7 +307,7 @@ fun RemittanceValidation(
                                 toAccount = account,
                                 fromAccount = "${agentAccount.value?.account}",
                                 amount = "amount",
-                                mobile = "${user?.mobile}",
+                                mobile = "${use?.mobile}",
                                 narration = model.resourceProvider.getString(R.string.cash_deposit_),
                                 agentId = "${agentAccount.value?.agentID}",
                                 model = model,

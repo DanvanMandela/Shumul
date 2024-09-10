@@ -73,6 +73,12 @@ data class ValidationHashResponse(
     val data: HashMap<String, Any?>,
 )
 
+data class ValidationHashListResponse(
+    @field:SerializedName("Data")
+    @field:Expose
+    val data: MutableList<HashMap<String, Any?>>,
+)
+
 @Singleton
 class ValidationResponseTypeConverter @Inject constructor(
     private val gson: Gson,
@@ -95,5 +101,12 @@ class ValidationResponseTypeConverter @Inject constructor(
             null
         } else gson.fromJson(data, ValidationHashResponse::class.java)
     }
+
+    fun toHashList(data: String?): ValidationHashListResponse? {
+        return if (data == null) {
+            null
+        } else gson.fromJson(data, ValidationHashListResponse::class.java)
+    }
+
 
 }

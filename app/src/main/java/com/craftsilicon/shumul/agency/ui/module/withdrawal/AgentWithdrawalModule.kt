@@ -37,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -56,11 +55,10 @@ import com.craftsilicon.shumul.agency.data.bean.ValidationBean
 import com.craftsilicon.shumul.agency.data.security.APP
 import com.craftsilicon.shumul.agency.data.security.ActivationData
 import com.craftsilicon.shumul.agency.data.source.model.RemoteViewModelImpl
-import com.craftsilicon.shumul.agency.data.source.model.WorkViewModel
-import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
+import com.craftsilicon.shumul.agency.ui.module.ErrorDialog
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
@@ -68,8 +66,9 @@ import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferConfirmDialog
 import com.craftsilicon.shumul.agency.ui.module.fund.FundTransferModuleModuleResponse
 import com.craftsilicon.shumul.agency.ui.module.validation.ValidationModuleResponse
 import com.craftsilicon.shumul.agency.ui.module.withdrawal.WithdrawalModuleHelper.otpTransactionAgent
+import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
+import com.craftsilicon.shumul.agency.ui.navigation.Module
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
-import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
 import com.craftsilicon.shumul.agency.ui.util.MoneyVisualTransformation
 import com.craftsilicon.shumul.agency.ui.util.horizontalModulePadding
@@ -78,10 +77,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @Composable
-fun AgentWithdrawalModule(function: () -> Unit) {
+fun AgentWithdrawalModule(function: () -> Unit,data: GlobalData) {
     val context = LocalContext.current
-    val work = hiltViewModel<WorkViewModel>()
-    val owner = LocalLifecycleOwner.current
+
     val model: RemoteViewModelImpl = hiltViewModel()
     val snackState = remember { SnackbarHostState() }
     var screenState: ModuleState by remember {
@@ -89,6 +87,7 @@ fun AgentWithdrawalModule(function: () -> Unit) {
     }
     val user = model.preferences.userData.collectAsState().value
     val accountState = model.preferences.currentAccount.collectAsState().value
+    var showErrorDialog by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
     var account by rememberSaveable {
@@ -304,6 +303,8 @@ fun AgentWithdrawalModule(function: () -> Unit) {
                         Spacer(modifier = Modifier.size(horizontalModulePadding))
                         Button(
                             onClick = {
+                                val use = model.userState
+                                val stateAccount = use?.account?.first()
                                 scope.launch {
                                     if (agentAccount.value == null) {
                                         snackState.showSnackbar(
@@ -334,9 +335,9 @@ fun AgentWithdrawalModule(function: () -> Unit) {
                                                         toAccount = account,
                                                         fromAccount = "${agentAccount.value?.account}",
                                                         amount = amount,
-                                                        mobile = "${user?.mobile}",
+                                                        mobile = "${use?.mobile}",
                                                         narration = narration,
-                                                        agentId = "${agentAccount.value?.agentID}",
+                                                        agentId = "${stateAccount?.agentID}",
                                                         pin = password,
                                                         model = model,
                                                         context = context
@@ -370,19 +371,7 @@ fun AgentWithdrawalModule(function: () -> Unit) {
                                                                 showDialog = true
                                                             },
                                                             onToken = {
-                                                                work.routeData(owner, object :
-                                                                    WorkStatus {
-                                                                    override fun workDone(b: Boolean) {
-                                                                        if (b) action.invoke()
-                                                                    }
-
-                                                                    override fun progress(p: Int) {
-                                                                        AppLogger.instance.appLog(
-                                                                            "DATA:Progress",
-                                                                            "$p"
-                                                                        )
-                                                                    }
-                                                                })
+                                                                showErrorDialog=true
                                                             }
                                                         )
 
@@ -425,6 +414,11 @@ fun AgentWithdrawalModule(function: () -> Unit) {
             )
         }
 
+        if (showErrorDialog) ErrorDialog(message = stringResource(id = R.string.session_expired_login_)) {
+            showErrorDialog = false
+            data.controller.navigate(Module.Splash.route)
+        }
+
         if (showDialog) when (val s = moduleCall) {
             is Response.Success -> SuccessDialog(
                 message = "${s.data["message"]}",
@@ -438,6 +432,8 @@ fun AgentWithdrawalModule(function: () -> Unit) {
                 data = validationData.value!!,
                 action = { otp ->
                     showDialog = false
+                    val use = model.userState
+                    val stateAccount = use?.account?.first()
                     action = {
                         model.web(
                             path = "${model.deviceData?.agent}",
@@ -445,9 +441,9 @@ fun AgentWithdrawalModule(function: () -> Unit) {
                                 toAccount = account,
                                 fromAccount = "${agentAccount.value?.account}",
                                 amount = amount,
-                                mobile = "${user?.mobile}",
+                                mobile = "${use?.mobile}",
                                 narration = "${validationData.value?.traceNo}",
-                                agentId = "${agentAccount.value?.agentID}",
+                                agentId = "${stateAccount?.agentID}",
                                 pin = password,
                                 model = model,
                                 otp = otp,
@@ -478,19 +474,7 @@ fun AgentWithdrawalModule(function: () -> Unit) {
                                         screenState = ModuleState.DISPLAY
                                         showDialog = true
                                     }, onToken = {
-                                        work.routeData(owner, object :
-                                            WorkStatus {
-                                            override fun workDone(b: Boolean) {
-                                                if (b) action.invoke()
-                                            }
-
-                                            override fun progress(p: Int) {
-                                                AppLogger.instance.appLog(
-                                                    "DATA:Progress",
-                                                    "$p"
-                                                )
-                                            }
-                                        })
+                                      showErrorDialog=true
                                     }
                                 )
                             }

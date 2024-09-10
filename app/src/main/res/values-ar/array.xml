@@ -269,4 +269,13 @@
         <item>أرمل</item>
     </string-array>
 
+
+    <string-array name="sub_type">
+        <item>تجديد</item>
+        <item>اشتراك جديد</item>
+    </string-array>
+
+
+
+
 </resources>

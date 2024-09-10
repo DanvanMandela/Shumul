@@ -68,6 +68,7 @@ import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
 import com.craftsilicon.shumul.agency.ui.module.ConfirmDialog
+import com.craftsilicon.shumul.agency.ui.module.ErrorDialog
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
@@ -77,6 +78,8 @@ import com.craftsilicon.shumul.agency.ui.module.remittance.sumOf
 import com.craftsilicon.shumul.agency.ui.module.toBigNumberDisplay
 import com.craftsilicon.shumul.agency.ui.module.toHashMap
 import com.craftsilicon.shumul.agency.ui.module.validation.ValidationHelper
+import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
+import com.craftsilicon.shumul.agency.ui.navigation.Module
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
@@ -89,14 +92,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @Composable
-fun PayRemittanceAgent(function: () -> Unit) {
+fun PayRemittanceAgent(function: () -> Unit, data: GlobalData) {
     val context = LocalContext.current
     val work = hiltViewModel<WorkViewModel>()
     val owner = LocalLifecycleOwner.current
     val model: RemoteViewModelImpl = hiltViewModel()
     val snackState = remember { SnackbarHostState() }
     var screenState: ModuleState by remember {
-        mutableStateOf(ModuleState.DISPLAY)
+        mutableStateOf(ModuleState.LOADING)
     }
     val local = hiltViewModel<LocalViewModelImpl>()
 
@@ -131,12 +134,20 @@ fun PayRemittanceAgent(function: () -> Unit) {
         mutableStateOf("")
     }
 
+    var remittanceRead by rememberSaveable {
+        mutableStateOf(false)
+    }
+
 
     var moduleCall: ModuleCall by remember {
         mutableStateOf(Response.Confirm)
     }
 
     var showDialog by remember { mutableStateOf(false) }
+
+    var showErrorDialog by remember { mutableStateOf(false) }
+
+
     val currenciesData = local.currency.collectAsState().value
 
     var passwordVisibility by remember { mutableStateOf(false) }
@@ -150,17 +161,18 @@ fun PayRemittanceAgent(function: () -> Unit) {
 
 
 
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(key1 = Unit, key2 = currencyId) {
         user?.account?.forEach {
             agentAccounts.apply {
                 removeIf { p -> p.key == it }
-                add(
-                    DropDownResult(
-                        key = it,
-                        desc = it.account,
-                        display = it == user.account.first()
+                if (it.currency == currencyId)
+                    add(
+                        DropDownResult(
+                            key = it,
+                            desc = it.account,
+                            display = it == user.account.first()
+                        )
                     )
-                )
             }
         }
     }
@@ -169,12 +181,14 @@ fun PayRemittanceAgent(function: () -> Unit) {
         LaunchedEffect(key1 = Unit) {
             delay(600)
             action = {
+                val use = model.userState
+                val stateAccount = use?.account?.first()
                 model.web(
                     path = "${model.deviceData?.agent}",
                     data = RemittanceModuleHelper.currency(
-                        account = "${user?.account?.lastOrNull()?.account}",
-                        mobile = "${appUser?.mobile}",
-                        agentId = "${appUser?.agent}",
+                        account = "${stateAccount?.account}",
+                        mobile = "${use?.mobile}",
+                        agentId = "${stateAccount?.agentID}",
                         model = model,
                         context = context
                     )!!,
@@ -198,19 +212,7 @@ fun PayRemittanceAgent(function: () -> Unit) {
                                     delay(200)
                                 }
                             }, onToken = {
-                                work.routeData(owner, object :
-                                    WorkStatus {
-                                    override fun workDone(b: Boolean) {
-                                        if (b) action.invoke()
-                                    }
-
-                                    override fun progress(p: Int) {
-                                        AppLogger.instance.appLog(
-                                            "DATA:Progress",
-                                            "$p"
-                                        )
-                                    }
-                                })
+                                showErrorDialog = true
                             }
                         )
                     }
@@ -286,7 +288,6 @@ fun PayRemittanceAgent(function: () -> Unit) {
                                     data = MutableStateFlow(agentAccounts)
                                 ) { result ->
                                     agentAccount.value = result.key as Account
-                                    currencyId="${agentAccount.value?.currency}"
                                 }
                             }
                         }
@@ -308,6 +309,7 @@ fun PayRemittanceAgent(function: () -> Unit) {
                                 fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
                                 fontSize = MaterialTheme.typography.labelLarge.fontSize
                             ),
+                            readOnly = remittanceRead,
                             keyboardOptions = KeyboardOptions(
                                 imeAction = ImeAction.Next,
                                 keyboardType = KeyboardType.Text
@@ -361,12 +363,14 @@ fun PayRemittanceAgent(function: () -> Unit) {
                         Spacer(modifier = Modifier.size(horizontalModulePadding))
                         Button(
                             onClick = {
+                                val use = model.userState
+                                val stateAccount = use?.account?.first()
                                 scope.launch {
                                     if (remittanceValue.isBlank()) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_receiver_name_)
                                         )
-                                    }  else if (password.isBlank()) {
+                                    } else if (password.isBlank()) {
                                         snackState.showSnackbar(
                                             context.getString(R.string.enter_pin_)
                                         )
@@ -377,8 +381,8 @@ fun PayRemittanceAgent(function: () -> Unit) {
                                                     path = "${model.deviceData?.agent}",
                                                     data = RemittanceModuleHelper.search(
                                                         account = remittanceValue,
-                                                        agentId = "${appUser?.agent}",
-                                                        mobile = "${appUser?.mobile}",
+                                                        agentId = "${stateAccount?.agentID}",
+                                                        mobile = "${use?.mobile}",
                                                         context = context,
                                                         model = model
                                                     )!!,
@@ -408,6 +412,14 @@ fun PayRemittanceAgent(function: () -> Unit) {
                                                                     "D" to map["amount"]
                                                                 ).sumOf()
                                                                 moduleCall = Response.Confirm
+                                                                val curr = currenciesData.find {
+                                                                    it.id ==
+                                                                            "${map["remittanceCurrancyId"]}".toBigNumberDisplay()
+                                                                }?.description
+                                                                if (curr != null) {
+                                                                    currencyId = curr
+                                                                }
+                                                                remittanceRead = true
                                                                 validationData.value =
                                                                     ValidationBean().apply {
                                                                         isOtp = false
@@ -420,6 +432,7 @@ fun PayRemittanceAgent(function: () -> Unit) {
                                                                                     to map["receiver"],
                                                                             context.getString(R.string.receiver_mobile_)
                                                                                     to "${map["receiverMobile"] ?: 0}".toBigNumberDisplay(),
+                                                                            context.getString(R.string.currency_) to curr,
                                                                             context.getString(R.string.amount_)
                                                                                     to "${map["amount"] ?: 0}".toBigNumberDisplay(),
                                                                         )
@@ -427,19 +440,7 @@ fun PayRemittanceAgent(function: () -> Unit) {
                                                                         this.amount = totalAmount
                                                                     }
                                                             }, onToken = {
-                                                                work.routeData(owner, object :
-                                                                    WorkStatus {
-                                                                    override fun workDone(b: Boolean) {
-                                                                        if (b) action.invoke()
-                                                                    }
-
-                                                                    override fun progress(p: Int) {
-                                                                        AppLogger.instance.appLog(
-                                                                            "DATA:Progress",
-                                                                            "$p"
-                                                                        )
-                                                                    }
-                                                                })
+                                                                showErrorDialog = true
                                                             }
                                                         )
                                                     }
@@ -489,6 +490,12 @@ fun PayRemittanceAgent(function: () -> Unit) {
         }
 
 
+        if (showErrorDialog) ErrorDialog(message = stringResource(id = R.string.session_expired_login_)) {
+            showErrorDialog = false
+            data.controller.navigate(Module.Splash.route)
+        }
+
+
 
         if (showDialog) when (val s = moduleCall) {
             is Response.Success -> SuccessDialog(
@@ -502,6 +509,8 @@ fun PayRemittanceAgent(function: () -> Unit) {
             is Response.Confirm -> ConfirmDialog(
                 data = validationData.value!!,
                 action = {
+                    val use = model.userState
+                    val stateAccount = use?.account?.first()
                     showDialog = false
                     action = {
                         val map = validationData.value!!.extra
@@ -513,8 +522,8 @@ fun PayRemittanceAgent(function: () -> Unit) {
                                 data = RemittanceModuleHelper.payRemittance(
                                     account = "${agentAccount.value?.account}",
                                     remittance = remittanceValue,
-                                    mobile = "${appUser?.mobile}",
-                                    agentId = "${appUser?.agent}",
+                                    mobile = "${use?.mobile}",
+                                    agentId = "${stateAccount?.agentID}",
                                     pin = password,
                                     model = model,
                                     context = context,
@@ -565,19 +574,7 @@ fun PayRemittanceAgent(function: () -> Unit) {
                                             screenState = ModuleState.DISPLAY
                                             showDialog = true
                                         }, onToken = {
-                                            work.routeData(owner, object :
-                                                WorkStatus {
-                                                override fun workDone(b: Boolean) {
-                                                    if (b) action.invoke()
-                                                }
-
-                                                override fun progress(p: Int) {
-                                                    AppLogger.instance.appLog(
-                                                        "DATA:Progress",
-                                                        "$p"
-                                                    )
-                                                }
-                                            })
+                                            showErrorDialog = true
                                         }
                                     )
                                 }

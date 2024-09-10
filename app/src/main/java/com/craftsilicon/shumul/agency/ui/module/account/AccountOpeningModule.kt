@@ -116,14 +116,16 @@ fun AccountOpeningModule(data: GlobalData) {
 
     if (productData.isEmpty())
         LaunchedEffect(key1 = Unit) {
+            val use = model.userState
+            val stateAccount = use?.account?.first()
             delay(600)
             action = {
                 model.web(
                     path = "${model.deviceData?.agent}",
                     data = productFunc(
-                        account = "${user?.account?.lastOrNull()?.account}",
-                        mobile = "${user?.mobile}",
-                        agentId = "${user?.account?.firstOrNull()?.agentID}",
+                        account = "${stateAccount?.account}",
+                        mobile = "${use?.mobile}",
+                        agentId = "${stateAccount?.agentID}",
                         model = model,
                         context = context
                     )!!,

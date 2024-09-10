@@ -65,12 +65,14 @@ import com.craftsilicon.shumul.agency.data.source.work.WorkStatus
 import com.craftsilicon.shumul.agency.ui.custom.CustomSnackBar
 import com.craftsilicon.shumul.agency.ui.custom.DropDownResult
 import com.craftsilicon.shumul.agency.ui.custom.EditDropDown
+import com.craftsilicon.shumul.agency.ui.module.ErrorDialog
 import com.craftsilicon.shumul.agency.ui.module.ModuleCall
 import com.craftsilicon.shumul.agency.ui.module.Response
 import com.craftsilicon.shumul.agency.ui.module.SuccessDialog
 import com.craftsilicon.shumul.agency.ui.module.validation.ValidationModuleResponse
 import com.craftsilicon.shumul.agency.ui.module.validation.validationFunc
 import com.craftsilicon.shumul.agency.ui.navigation.GlobalData
+import com.craftsilicon.shumul.agency.ui.navigation.Module
 import com.craftsilicon.shumul.agency.ui.navigation.ModuleState
 import com.craftsilicon.shumul.agency.ui.util.AppLogger
 import com.craftsilicon.shumul.agency.ui.util.LoadingModule
@@ -127,6 +129,8 @@ fun DepositModule(data: GlobalData) {
     }
 
     var showDialog by remember { mutableStateOf(false) }
+
+    var showErrorDialog by remember { mutableStateOf(false) }
 
 
     var passwordVisibility by remember { mutableStateOf(false) }
@@ -369,6 +373,8 @@ fun DepositModule(data: GlobalData) {
                             Spacer(modifier = Modifier.size(horizontalModulePadding))
                             Button(
                                 onClick = {
+                                    val use = model.userState
+                                    val stateAccount = use?.account?.first()
                                     scope.launch {
                                         if (agentAccount.value == null) {
                                             snackState.showSnackbar(
@@ -396,7 +402,7 @@ fun DepositModule(data: GlobalData) {
                                                     path = "${model.deviceData?.agent}",
                                                     data = validationFunc(
                                                         account = account,
-                                                        mobile = "${user?.mobile}",
+                                                        mobile = "${use?.mobile}",
                                                         agentId = "${agentAccount.value?.agentID}",
                                                         model = model,
                                                         context = context
@@ -422,19 +428,7 @@ fun DepositModule(data: GlobalData) {
                                                                 validationData.value = validation
                                                                 showDialog = true
                                                             }, onToken = {
-                                                                work.routeData(owner, object :
-                                                                    WorkStatus {
-                                                                    override fun workDone(b: Boolean) {
-                                                                        if (b) action.invoke()
-                                                                    }
-
-                                                                    override fun progress(p: Int) {
-                                                                        AppLogger.instance.appLog(
-                                                                            "DATA:Progress",
-                                                                            "$p"
-                                                                        )
-                                                                    }
-                                                                })
+                                                                showErrorDialog = true
                                                             }
                                                         )
                                                     }
@@ -480,6 +474,7 @@ fun DepositModule(data: GlobalData) {
             Response.Confirm -> DepositConfirmDialog(
                 data = validationData.value!!,
                 action = {
+                    val use = model.userState
                     showDialog = false
                     action = {
                         model.web(
@@ -488,7 +483,7 @@ fun DepositModule(data: GlobalData) {
                                 toAccount = account,
                                 fromAccount = "${agentAccount.value?.account}",
                                 amount = amount,
-                                mobile = "${user?.mobile}",
+                                mobile = "${use?.mobile}",
                                 narration = narration,
                                 agentId = "${agentAccount.value?.agentID}",
                                 model = model,
@@ -522,19 +517,7 @@ fun DepositModule(data: GlobalData) {
                                         screenState = ModuleState.DISPLAY
                                         showDialog = true
                                     }, onToken = {
-                                        work.routeData(owner, object :
-                                            WorkStatus {
-                                            override fun workDone(b: Boolean) {
-                                                if (b) action.invoke()
-                                            }
-
-                                            override fun progress(p: Int) {
-                                                AppLogger.instance.appLog(
-                                                    "DATA:Progress",
-                                                    "$p"
-                                                )
-                                            }
-                                        })
+                                        showErrorDialog = true
                                     }
                                 )
                             }
@@ -553,6 +536,11 @@ fun DepositModule(data: GlobalData) {
                 })
         }
 
+    }
+
+    if (showErrorDialog) ErrorDialog(message = stringResource(id = R.string.session_expired_login_)) {
+        showErrorDialog = false
+        data.controller.navigate(Module.Splash.route)
     }
 
 

@@ -36,7 +36,7 @@ import remittance
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun  RemittanceModule(data: GlobalData) {
+fun RemittanceModule(data: GlobalData) {
 
     val navController = rememberNavController()
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection()) {
@@ -89,7 +89,7 @@ fun  RemittanceModule(data: GlobalData) {
                         }
                         RemittanceModuleAgent(function = {
                             data.controller.navigateUp()
-                        })
+                        }, data = data)
                     }
 
                     setComposable(route = Module.Remittance.Customer.route) {
@@ -98,7 +98,7 @@ fun  RemittanceModule(data: GlobalData) {
                         }
                         RemittanceModuleCustomer(function = {
                             data.controller.navigateUp()
-                        })
+                        }, data = data)
                     }
                 }
             }

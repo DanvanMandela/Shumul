@@ -249,6 +249,8 @@ fun AccountToCashRedeem(function: () -> Unit) {
                         Spacer(modifier = Modifier.size(horizontalModulePadding))
                         Button(
                             onClick = {
+                                val use = model.userState
+                                val stateAccount = use?.account?.first()
                                 scope.launch {
 
                                     if (agentAccount.value == null) {
@@ -269,7 +271,7 @@ fun AccountToCashRedeem(function: () -> Unit) {
                                                 path = "${model.deviceData?.agent}",
                                                 data = AccountToCashHelper.details(
                                                     account = "${agentAccount.value?.account}",
-                                                    mobile = "${user?.mobile}",
+                                                    mobile = "${use?.mobile}",
                                                     agentId = "${agentAccount.value?.agentID}",
                                                     pin = password,
                                                     model = model,
@@ -373,6 +375,7 @@ fun AccountToCashRedeem(function: () -> Unit) {
             is Response.Confirm -> FundTransferConfirmDialog(
                 data = validationData.value!!,
                 action = { otp ->
+                    val use = model.userState
                     showDialog = false
                     action = {
                         model.web(
@@ -381,8 +384,8 @@ fun AccountToCashRedeem(function: () -> Unit) {
                                 account = "${agentAccount.value?.account}",
                                 branch = "${agentAccount.value?.branchId}",
                                 amount = "${validationData.value?.amount}",
-                                mobile = "${user?.mobile}",
-                                agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                mobile = "${use?.mobile}",
+                                agentId = "${agentAccount.value?.agentID}",
                                 pin = password,
                                 model = model,
                                 otp = otp,

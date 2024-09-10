@@ -66,6 +66,56 @@ object ValidationHelper {
         }
     }
 
+
+    fun validateHashList(
+        response: HashMap<String, Any?>,
+        model: RemoteViewModelImpl,
+        onError: (message: String?) -> Unit,
+        onSuccess: (data: MutableList<HashMap<String, Any?>>) -> Unit,
+        onToken: () -> Unit
+    ) {
+        try {
+            AppLogger.instance.appLog("VALIDATION:RESPONSE:ENCRYPTED", Gson().toJson(response))
+            if (response.containsKey("Response")) {
+                val global = model.globalResponseConverter
+                    .convert(model.any.convert(response))
+                if (global != null)
+                    GlobalResponseModule(
+                        response = global,
+                        storage = model.preferences,
+                        security = model.restApiSecurity,
+                        serializer = model.globalDataConverter,
+                        onError = onError,
+                        onSuccess = {
+                            val validation = model.validation.toHashList(it)
+                            if (validation != null) {
+                                onSuccess(validation.data)
+                            } else onError(
+                                "${
+                                    response["message"] ?: model.resourceProvider
+                                        .getString(R.string.something_went_wrong)
+                                }"
+                            )
+                        }, onToken = onToken
+                    )
+                else onError(
+                    "${
+                        response["message"] ?: model.resourceProvider
+                            .getString(R.string.something_went_wrong)
+                    }"
+                )
+            } else onError(
+                "${
+                    response["message"] ?: model.resourceProvider
+                        .getString(R.string.something_went_wrong)
+                }"
+            )
+        } catch (e: Exception) {
+            onError(e.message)
+            e.printStackTrace()
+        }
+    }
+
 }
 
 class ValidationModuleResponse(
@@ -135,13 +185,13 @@ fun validationFunc(
         val map = APP.data(
             context = context,
             storage = model.preferences,
-            action = ActionTypeEnum.VALIDATE.action,
+            action = ActionTypeEnum.VALIDATE_ACCOUNT.action,
             uniqueId = uniqueID
         )
         map["AccountID"] = account
         map["MOBILENUMBER"] = mobile
         map["BANKACCOUNTID"] = account
-        map["AGENTID"] = agentId
+        map["AGENTID"]=agentId
         map["CALLTYPE"] = "B-"
         AppLogger.instance.appLog("BALANCE:REQUEST", Gson().toJson(map))
         PayloadRequest(

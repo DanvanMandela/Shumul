@@ -12,11 +12,17 @@ import javax.inject.Singleton
 
 data class StaticData(
     @field:Expose
-    @field:SerializedName("SubCode")
+    @field:SerializedName("PaymentSubCode")
     val id: String?,
     @field:Expose
+    @field:SerializedName("AirtimeCode")
+    val airTime: String?,
+    @field:Expose
     @field:SerializedName("Description")
-    val description: String?
+    val description: String?,
+    @field:Expose
+    @field:SerializedName("Description2")
+    val descTwo: String?
 )
 
 data class StaticDataResponse(

@@ -157,22 +157,7 @@ val customerMenus = mutableListOf(
             type = NavigateModule(),
         )
     ),
-//    MenuItem(
-//        title = R.string.account_to_cash_,
-//        icon = R.drawable.account_to_cash,
-//        navigate = NavigateTo(
-//            route = Module.AccountToCash().route,
-//            type = NavigateModule(),
-//        )
-//    ),
-//    MenuItem(
-//        title = R.string.cash_to_cash_,
-//        icon = R.drawable.cash_to_cash,
-//        navigate = NavigateTo(
-//            route = Module.CashToCash().route,
-//            type = NavigateModule(),
-//        )
-//    ),
+
     MenuItem(
         title = R.string.airtime_,
         icon = R.drawable.airtime,

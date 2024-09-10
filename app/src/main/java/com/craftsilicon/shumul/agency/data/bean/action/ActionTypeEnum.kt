@@ -1,7 +1,7 @@
 package com.craftsilicon.shumul.agency.data.bean.action
 
 enum class ActionTypeEnum(val action: String) {
-    VALIDATE("ACCOUNTVALIDATION"),
+    VALIDATE_ACCOUNT("ACCOUNTVALIDATION"),
     LOGIN("LOGIN"),
     BALANCE("BALANCE"),
     DEPOSIT("DEPOSITSELF"),
@@ -28,5 +28,9 @@ enum class ActionTypeEnum(val action: String) {
     PAY_REMITTANCE("PAYREMITTANCE"),
     BILL_PAYMENT("BILLPAYMENT"),
     GET_MNO("GETAIRTIMEMNOS"),
+
+    VALIDATE("VALIDATE"),
+    BOUQUET("BOUQUE")
+
 
 }

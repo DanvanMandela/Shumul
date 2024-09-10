@@ -92,7 +92,7 @@ fun balanceFunc(
         map["AccountID"] = account
         map["BANKACCOUNTID"] = account
         map["MOBILENUMBER"] = mobile
-        map["AGENTID"] = agentId
+        map["AGENTID"]=agentId
         map["TRXPIN"] = Util.newEncrypt(pin)
         map["CALLTYPE"] = "B-"
         AppLogger.instance.appLog("BALANCE:REQUEST", Gson().toJson(map))

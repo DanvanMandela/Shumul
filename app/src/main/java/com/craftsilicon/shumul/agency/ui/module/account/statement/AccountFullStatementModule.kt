@@ -243,6 +243,8 @@ fun AccountFullStatementModule(action: () -> Unit) {
                 is NavigateDialog.Statement.Full -> FullStatementDatePicker(
                     action = { from, to ->
                         showDialog = false
+                        val use = model.userState
+                        val stateAccount = use?.account?.first()
                         function = {
                             model.web(
                                 path = "${model.deviceData?.agent}",
@@ -250,8 +252,8 @@ fun AccountFullStatementModule(action: () -> Unit) {
                                     from = from,
                                     to = to,
                                     account = account,
-                                    mobile = "${user?.mobile}",
-                                    agentId = "${user?.account?.firstOrNull()?.agentID}",
+                                    mobile = "${use?.mobile}",
+                                    agentId = "${stateAccount?.agentID}",
                                     model = model,
                                     pin = password,
                                     context = context
